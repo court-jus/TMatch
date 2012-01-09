@@ -1,0 +1,179 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <title>Tmatch</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.1/dojo/dojo.js" type="text/javascript"></script>
+    <script type="text/javascript" charset="utf-8">
+        var map = [];
+        var cellsmap = [];
+        function randomType()
+            {
+            var i = Math.random() * 100.0;
+            if (i > 99) return 8;
+            if (i > 98) return 7;
+            if (i > 97) return 6;
+            if (i > 95) return 5;
+            if (i > 92) return 4;
+            if (i > 77) return 3;
+            if (i > 52) return 2;
+            return 1;
+            }
+        function setClass(node, cssclass)
+            {
+            dojo.removeClass(node);
+            dojo.addClass(node, cssclass);
+            }
+        function coordsToI(x, y)
+            {
+            return y*6 + x;
+            }
+        function findEquiv(map, t, x, y, seen)
+            {
+            if (map[x][y] !== t) return [];
+            var result = [[x,y]]
+            if (typeof seen === "undefined") seen = [];
+            seen.push(coordsToI(x,y));
+            if ((dojo.indexOf(seen, coordsToI(x-1,y)) === -1) && (x > 0) && (map[x-1][y] === t))
+                result = result.concat(findEquiv(map, t, x-1, y, seen));
+            if ((dojo.indexOf(seen, coordsToI(x+1,y)) === -1) && (x < 5) && (map[x+1][y] === t))
+                result = result.concat(findEquiv(map, t, x+1, y, seen));
+            if ((dojo.indexOf(seen, coordsToI(x,y-1)) === -1) && (y > 0) && (map[x][y-1] === t))
+                result = result.concat(findEquiv(map, t, x, y-1, seen));
+            if ((dojo.indexOf(seen, coordsToI(x,y+1)) === -1) && (y < 5) && (map[x][y+1] === t))
+                result = result.concat(findEquiv(map, t, x, y+1, seen));
+            return result;
+            }
+        function checkComb(map, t, x, y)
+            {
+            console.debug(x,y);
+            var comb = findEquiv(map, t, x, y);
+            if (comb.length > 2)
+                {
+                console.debug("comb",comb);
+                for (var i = 0; i < comb.length; i ++)
+                    {
+                    u = comb[i][0]; v = comb[i][1];
+                    map[u][v] = 0;
+                    setClass(cellsmap[v][u], "empty");
+                    }
+                console.debug("ici",x,y);
+                map[x][y] = t + 1;
+                setClass(cellsmap[y][x], "type_" + (t + 1));
+                checkComb(map, t + 1, x, y);
+                }
+            }
+        dojo.addOnLoad(function()
+            {
+            //var map = [];
+            var current_type = randomType();
+            var container = dojo.create("div", {id: "container"}, dojo.body());
+            var current = dojo.create("div", {id: "current"}, container);
+            setClass(current, "type_" + current_type);
+            var stash = dojo.create("div", {id: "stash"}, container);
+            var playzone = dojo.create("table", {id: "playzone"}, container);
+            for (var r = 0; r < 6 ; r ++)
+                {
+                var tr = dojo.create("tr", {}, playzone);
+                var row = [];
+                var cellsrow = [];
+                for (var c = 0; c < 6; c ++)
+                    {
+                    row[c] = 0;
+                    var td = dojo.create("td", {"tmatchx":c,"tmatchy":r}, tr);
+                    dojo.addClass(td, "empty");
+                    dojo.connect(td, "onclick", function(evt)
+                        {
+                        x = parseInt(dojo.attr(this, "tmatchx"));
+                        y = parseInt(dojo.attr(this, "tmatchy"));
+                        if (map[x][y] === 0)
+                            {
+                            map[x][y] = current_type;
+                            setClass(this, "type_" + current_type);
+                            checkComb(map, current_type, x, y);
+                            current_type = randomType();
+                            setClass(current, "type_" + current_type);
+                            }
+                        });
+                    cellsrow[c] = td;
+                    }
+                map[r] = row;
+                cellsmap[r] = cellsrow;
+                }
+            });
+    </script>
+    <style type="text/css" media="screen">
+        #stash
+            {
+            height: 40px;
+            width: 40px;
+            border: 1px solid black;
+            }
+        #current
+            {
+            height: 40px;
+            width: 40px;
+            border: 1px solid black;
+            text-align: center;
+            vertical-align: middle;
+            }
+        #playzone
+            {
+            /*
+            width: 100%;
+            */
+            }
+        #playzone tr
+            {
+            height: 40px;
+            }
+        #playzone td
+            {
+            width: 40px;
+            border: 1px solid black;
+            }
+        .type_1
+            {
+            background-color: red;
+            background-image: url('media/type_1.png');
+            }
+        .type_2
+            {
+            background-color: blue;
+            background-image: url('media/type_2.png');
+            }
+        .type_3
+            {
+            background-color: green;
+            background-image: url('media/type_3.png');
+            }
+        .type_4
+            {
+            background-color: yellow;
+            background-image: url('media/type_4.png');
+            }
+        .type_5
+            {
+            background-color: orange;
+            background-image: url('media/type_5.png');
+            }
+        .type_6
+            {
+            background-color: pink;
+            background-image: url('media/type_6.png');
+            }
+        .type_7
+            {
+            background-color: gray;
+            background-image: url('media/type_7.png');
+            }
+        .type_8
+            {
+            background-color: black;
+            background-image: url('media/type_8.png');
+            }
+    </style>
+</head>
+<body>
+</body>
+</html>

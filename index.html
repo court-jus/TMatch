@@ -7,6 +7,9 @@
     <script type="text/javascript" charset="utf-8">
         var map = [];
         var cellsmap = [];
+        var CLASSES = {
+            "-1": "block"
+            };
         function randomType()
             {
             var i = Math.random() * 100.0;
@@ -15,14 +18,25 @@
             if (i > 97) return 6;
             if (i > 95) return 5;
             if (i > 92) return 4;
-            if (i > 77) return 3;
+            if (i > 77) return -1;//3;
             if (i > 52) return 2;
             return 1;
             }
-        function setClass(node, cssclass)
+        function setClass(node, t)
             {
             dojo.removeClass(node);
-            dojo.addClass(node, cssclass);
+            if (t === 0)
+                {
+                dojo.addClass(node, "empty");
+                }
+            else if (t > 0)
+                {
+                dojo.addClass(node, "type_" + t);
+                }
+            else
+                {
+                dojo.addClass(node, CLASSES[t]);
+                }
             }
         function coordsToI(x, y)
             {
@@ -55,11 +69,11 @@
                     {
                     u = comb[i][0]; v = comb[i][1];
                     map[u][v] = 0;
-                    setClass(cellsmap[v][u], "empty");
+                    setClass(cellsmap[v][u], 0);
                     }
                 console.debug("ici",x,y);
                 map[x][y] = t + 1;
-                setClass(cellsmap[y][x], "type_" + (t + 1));
+                setClass(cellsmap[y][x], t + 1);
                 checkComb(map, t + 1, x, y);
                 }
             }
@@ -69,7 +83,7 @@
             var current_type = randomType();
             var container = dojo.create("div", {id: "container"}, dojo.body());
             var current = dojo.create("div", {id: "current"}, container);
-            setClass(current, "type_" + current_type);
+            setClass(current, current_type);
             var stash = dojo.create("div", {id: "stash"}, container);
             var playzone = dojo.create("table", {id: "playzone"}, container);
             for (var r = 0; r < 6 ; r ++)
@@ -89,10 +103,11 @@
                         if (map[x][y] === 0)
                             {
                             map[x][y] = current_type;
-                            setClass(this, "type_" + current_type);
-                            checkComb(map, current_type, x, y);
+                            setClass(this, current_type);
+                            if (current_type > 0)
+                                checkComb(map, current_type, x, y);
                             current_type = randomType();
-                            setClass(current, "type_" + current_type);
+                            setClass(current, current_type);
                             }
                         });
                     cellsrow[c] = td;
@@ -132,14 +147,18 @@
             width: 40px;
             border: 1px solid black;
             }
+        .block
+            {
+            background-color: gray;
+            }
         .type_1
             {
-            background-color: red;
+            background-color: green;
             background-image: url('media/type_1.png');
             }
         .type_2
             {
-            background-color: blue;
+            background-color: green;
             background-image: url('media/type_2.png');
             }
         .type_3
@@ -149,27 +168,27 @@
             }
         .type_4
             {
-            background-color: yellow;
+            background-color: green;
             background-image: url('media/type_4.png');
             }
         .type_5
             {
-            background-color: orange;
+            background-color: green;
             background-image: url('media/type_5.png');
             }
         .type_6
             {
-            background-color: pink;
+            background-color: green;
             background-image: url('media/type_6.png');
             }
         .type_7
             {
-            background-color: gray;
+            background-color: green;
             background-image: url('media/type_7.png');
             }
         .type_8
             {
-            background-color: black;
+            background-color: green;
             background-image: url('media/type_8.png');
             }
     </style>

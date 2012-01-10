@@ -16,6 +16,8 @@
             };
         var WIDTH = 6;
         var HEIGHT = 6;
+        var CELL_WIDTH = 101;
+        var CELL_HEIGHT = 81;
         var current_type = 0;
         var current = null;
         var score = 0;
@@ -136,7 +138,7 @@
                     if (typeof map[x] === "undefined") map[x] = [];
                     map[x][y] = 0;
                     if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
-                    cellsmap[x][y] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"style":"top:"+(40*y+50)+";left:"+(40*x+100)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
+                    cellsmap[x][y] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"style":"top:"+(CELL_HEIGHT*y+50)+";left:"+(CELL_WIDTH*x+200)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
                     setClass(cellsmap[x][y], 0);
                     }
                 }
@@ -207,7 +209,7 @@
                 {
                 for (var y = 0; y < HEIGHT ; y ++)
                     {
-                    if (map[x][y] === -1)
+                    if (map[x][y] === -2)
                         {
                         blocks.push([x,y]);
                         }
@@ -309,25 +311,25 @@
             left: 20px;
             text-align: center;
             }
-        #stash
-            {
-            position: absolute;
-            top: 90px;
-            left: 30px;
-            height: 40px;
-            width: 40px;
-            border: 1px solid black;
-            }
         #current
             {
             position: absolute;
             top: 50px;
             left: 30px;
-            height: 40px;
-            width: 40px;
+            height: 171px;
+            width: 101px;
             border: 1px solid black;
             text-align: center;
             vertical-align: middle;
+            }
+        #stash
+            {
+            position: absolute;
+            top: 221px;
+            left: 30px;
+            height: 171px;
+            width: 101px;
+            border: 1px solid black;
             }
         #playzone
             {
@@ -337,67 +339,58 @@
             }
         #playzone div
             {
-            height: 40px;
-            width: 40px;
-            border: 1px solid black;
+            height: 171px;
+            width: 101px;
+            border: 1px solid gray;
             position: absolute;
+            background-position: bottom;
             }
         .matcher
             {
-            background-image: url('media/matcher.png');
+            background-image: url('media/Star.png');
             }
         .eraser
             {
-            background-image: url('media/eraser.png');
-            }
-        .jumping_block
-            {
-            background-color: gray;
-            background-image: url('media/jumping_block.png');
+            background-image: url('media/Key.png');
             }
         .block
             {
-            background-color: gray;
-            background-image: url('media/block.png');
+            background-image: url('media/Door Tall Closed.png');
+            }
+        .jumping_block
+            {
+            background-image: url('media/Enemy Bug.png');
             }
         .type_1
             {
-            background-color: green;
-            background-image: url('media/type_1.png');
+            background-image: url('media/Brown Block.png');
             }
         .type_2
             {
-            background-color: green;
-            background-image: url('media/type_2.png');
+            background-image: url('media/Dirt Block.png');
             }
         .type_3
             {
-            background-color: green;
-            background-image: url('media/type_3.png');
+            background-image: url('media/Grass Block.png');
             }
         .type_4
             {
-            background-color: green;
-            background-image: url('media/type_4.png');
+            background-image: url('media/Plain Block.png');
             }
         .type_5
             {
-            background-color: green;
-            background-image: url('media/type_5.png');
+            background-image: url('media/Stone Block.png');
             }
         .type_6
             {
-            background-color: green;
-            background-image: url('media/type_6.png');
+            background-image: url('media/Wood Block.png');
             }
         .type_7
             {
-            background-color: green;
-            background-image: url('media/type_7.png');
+            background-image: url('media/Wall Block.png');
             }
         .type_8
             {
-            background-color: green;
             background-image: url('media/type_8.png');
             }
     </style>

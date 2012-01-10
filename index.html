@@ -16,6 +16,9 @@
             };
         var WIDTH = 6;
         var HEIGHT = 6;
+        var current_type = 0;
+        var current = null;
+        var score = 0;
         function sort_unique(arr)
             {
             arr = arr.sort();
@@ -91,10 +94,12 @@
                 for (var i = 0; i < comb.length; i ++)
                     {
                     u = comb[i][0]; v = comb[i][1];
+                    score += t;
                     setType(map, u, v, 0);
                     }
                 setType(map, x, y, t + 1);
                 checkComb(map, t + 1, x, y);
+                score += (t+1)*t*comb.length;
                 }
             }
         function matchAll(map, x, y)
@@ -131,7 +136,7 @@
                     if (typeof map[x] === "undefined") map[x] = [];
                     map[x][y] = 0;
                     if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
-                    cellsmap[x][y] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"style":"top:"+(40*y+10)+";left:"+(40*x+80)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
+                    cellsmap[x][y] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"style":"top:"+(40*y+50)+";left:"+(40*x+100)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
                     setClass(cellsmap[x][y], 0);
                     }
                 }
@@ -150,12 +155,23 @@
                     }
                 }
             }
+        function doOneStep(changetype)
+            {
+            if (typeof changetype === "undefined") changetype = true;
+            if (changetype)
+                {
+                current_type = randomType();
+                setClass(current, current_type);
+                }
+            dojo.attr("score", "innerHTML", score);
+            }
         dojo.addOnLoad(function()
             {
             //var map = [];
-            var current_type = randomType();
+            current_type = randomType();
             var container = dojo.create("div", {id: "container"}, dojo.body());
-            var current = dojo.create("div", {id: "current"}, container);
+            dojo.create("div", {id: "score", innerHTML: score}, dojo.body());
+            current = dojo.create("div", {id: "current"}, container);
             setClass(current, current_type);
             var stash = dojo.create("div", {id: "stash"}, container);
             dojo.connect(stash, "onclick", function(evt)
@@ -187,23 +203,28 @@
                         y = parseInt(dojo.attr(this, "tmatchy"));
                         if ((current_type === -3) && (map[x][y] !== 0)) // eraser
                             {
+                            t = map[x][y];
+                            if (t > 0)
+                                {
+                                score -= t;
+                                }
+                            score += -10 * t;
                             setType(map, x, y, 0);
-                            current_type = randomType();
-                            setClass(current, current_type);
+                            doOneStep();
                             }
                         else if (map[x][y] === 0)
                             {
                             setType(map, x, y, current_type);
                             if (current_type > 0)
                                 {
+                                score += current_type;
                                 checkComb(map, current_type, x, y);
                                 }
                             else if (current_type === -4) // matcher
                                 {
                                 matchAll(map, x, y);
                                 }
-                            current_type = randomType();
-                            setClass(current, current_type);
+                            doOneStep();
                             }
                         });
                     }
@@ -211,14 +232,27 @@
             });
     </script>
     <style type="text/css" media="screen">
+        #score
+            {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-align: center;
+            }
         #stash
             {
+            position: absolute;
+            top: 90px;
+            left: 30px;
             height: 40px;
             width: 40px;
             border: 1px solid black;
             }
         #current
             {
+            position: absolute;
+            top: 50px;
+            left: 30px;
             height: 40px;
             width: 40px;
             border: 1px solid black;

@@ -7,20 +7,38 @@
     <script type="text/javascript" charset="utf-8">
         var map = [];
         var cellsmap = [];
+        var current_stash = 0;
         var CLASSES = {
-            "-1": "block"
+            "-1": "block",
+            "-2": "jumping_block",
+            "-3": "eraser",
+            "-4": "matcher",
             };
-        function randomType()
+        var WIDTH = 6;
+        var HEIGHT = 6;
+        function sort_unique(arr)
             {
+            arr = arr.sort();
+            var ret = [arr[0]];
+            for (var i = 1; i < arr.length; i++)
+                {
+                if (arr[i-1] !== arr[i])
+                    ret.push(arr[i]);
+                }
+            return ret;
+            }
+        function randomType(randommap)
+            {
+            if (typeof randommap === "undefined") randommap = false;
             var i = Math.random() * 100.0;
-            if (i > 99) return 8;
-            if (i > 98) return 7;
-            if (i > 97) return 6;
-            if (i > 95) return 5;
-            if (i > 92) return 4;
-            if (i > 77) return -1;//3;
-            if (i > 52) return 2;
-            return 1;
+            if (i > 99) return 4;       // ~hut
+            if ((i > 98) && !randommap) return -2;      // ~ninja
+            if (i > 97) return 3;       // ~tree
+            if ((i > 95) && !randommap) return -4;      // ~crystal
+            if ((i > 92) && !randommap) return -3;      // ~bot
+            if (i > 77) return -1;      // ~bear
+            if (i > 52) return 2;       // ~bush
+            return 1;                   // ~grass
             }
         function setClass(node, t)
             {
@@ -38,43 +56,98 @@
                 dojo.addClass(node, CLASSES[t]);
                 }
             }
+        function setType(map, x, y, t)
+            {
+            if (typeof map[x] === "undefined") map[x] = [];
+            if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
+            map[x][y] = t;
+            setClass(cellsmap[x][y], t);
+            }
         function coordsToI(x, y)
             {
-            return y*6 + x;
+            return y*WIDTH + x;
             }
-        function findEquiv(map, t, x, y, seen)
+        function findEquiv(map, t, x, y, seen, ignore)
             {
-            if (map[x][y] !== t) return [];
+            if ((typeof ignore === "undefined") && (map[x][y] !== t)) return [];
             var result = [[x,y]]
             if (typeof seen === "undefined") seen = [];
             seen.push(coordsToI(x,y));
             if ((dojo.indexOf(seen, coordsToI(x-1,y)) === -1) && (x > 0) && (map[x-1][y] === t))
                 result = result.concat(findEquiv(map, t, x-1, y, seen));
-            if ((dojo.indexOf(seen, coordsToI(x+1,y)) === -1) && (x < 5) && (map[x+1][y] === t))
+            if ((dojo.indexOf(seen, coordsToI(x+1,y)) === -1) && (x < WIDTH-1) && (map[x+1][y] === t))
                 result = result.concat(findEquiv(map, t, x+1, y, seen));
             if ((dojo.indexOf(seen, coordsToI(x,y-1)) === -1) && (y > 0) && (map[x][y-1] === t))
                 result = result.concat(findEquiv(map, t, x, y-1, seen));
-            if ((dojo.indexOf(seen, coordsToI(x,y+1)) === -1) && (y < 5) && (map[x][y+1] === t))
+            if ((dojo.indexOf(seen, coordsToI(x,y+1)) === -1) && (y < HEIGHT-1) && (map[x][y+1] === t))
                 result = result.concat(findEquiv(map, t, x, y+1, seen));
             return result;
             }
         function checkComb(map, t, x, y)
             {
-            console.debug(x,y);
             var comb = findEquiv(map, t, x, y);
             if (comb.length > 2)
                 {
-                console.debug("comb",comb);
                 for (var i = 0; i < comb.length; i ++)
                     {
                     u = comb[i][0]; v = comb[i][1];
-                    map[u][v] = 0;
-                    setClass(cellsmap[v][u], 0);
+                    setType(map, u, v, 0);
                     }
-                console.debug("ici",x,y);
-                map[x][y] = t + 1;
-                setClass(cellsmap[y][x], t + 1);
+                setType(map, x, y, t + 1);
                 checkComb(map, t + 1, x, y);
+                }
+            }
+        function matchAll(map, x, y)
+            {
+            result = [];
+            var possible_types = [];
+            var t = 0;
+            var equiv = [];
+            if (x>0) possible_types.push(map[x-1][y]);
+            if (x<WIDTH-1) possible_types.push(map[x+1][y]);
+            if (y>0) possible_types.push(map[x][y-1]);
+            if (y<HEIGHT-1) possible_types.push(map[x][y+1]);
+            possible_types = sort_unique(possible_types);
+            for(var i = 0; i < possible_types.length ; i++)
+                {
+                t = possible_types[i];
+                if (t < 1) continue;
+                equiv = findEquiv(map, t, x, y, [], true);
+                if (equiv.length > 2)
+                    {
+                    map[x][y] = t;
+                    checkComb(map, t, x, y);
+                    break;
+                    }
+                }
+            return possible_types;
+            }
+        function makeMap()
+            {
+            for (var x = 0; x < WIDTH; x++)
+                {
+                for (var y = 0; y < HEIGHT; y++)
+                    {
+                    if (typeof map[x] === "undefined") map[x] = [];
+                    map[x][y] = 0;
+                    if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
+                    cellsmap[x][y] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"style":"top:"+(40*y+10)+";left:"+(40*x+80)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
+                    setClass(cellsmap[x][y], 0);
+                    }
+                }
+            }
+        function randomizeMap()
+            {
+            var percent = 0.7;
+            for (var x = 0; x < WIDTH; x ++)
+                {
+                for (var y = 0; y < HEIGHT; y ++)
+                    {
+                    if (Math.random() > percent)
+                        {
+                        setType(map, x, y, randomType(true));
+                        }
+                    }
                 }
             }
         dojo.addOnLoad(function()
@@ -85,35 +158,55 @@
             var current = dojo.create("div", {id: "current"}, container);
             setClass(current, current_type);
             var stash = dojo.create("div", {id: "stash"}, container);
-            var playzone = dojo.create("table", {id: "playzone"}, container);
-            for (var r = 0; r < 6 ; r ++)
+            dojo.connect(stash, "onclick", function(evt)
                 {
-                var tr = dojo.create("tr", {}, playzone);
-                var row = [];
-                var cellsrow = [];
-                for (var c = 0; c < 6; c ++)
+                var old_stash = current_stash;
+                current_stash = current_type;
+                setClass(stash, current_stash);
+                if (old_stash !== 0)
                     {
-                    row[c] = 0;
-                    var td = dojo.create("td", {"tmatchx":c,"tmatchy":r}, tr);
-                    dojo.addClass(td, "empty");
-                    dojo.connect(td, "onclick", function(evt)
+                    current_type = old_stash;
+                    setClass(current, current_type);
+                    }
+                else
+                    {
+                    current_type = randomType();
+                    setClass(current, current_type);
+                    }
+                });
+            var playzone = dojo.create("div", {id: "playzone"}, container);
+            makeMap();
+            randomizeMap();
+            for (var x = 0; x < WIDTH ; x ++)
+                {
+                for (var y = 0; y < HEIGHT; y ++)
+                    {
+                    dojo.connect(cellsmap[x][y], "onclick", function(evt)
                         {
                         x = parseInt(dojo.attr(this, "tmatchx"));
                         y = parseInt(dojo.attr(this, "tmatchy"));
-                        if (map[x][y] === 0)
+                        if ((current_type === -3) && (map[x][y] !== 0)) // eraser
                             {
-                            map[x][y] = current_type;
-                            setClass(this, current_type);
+                            setType(map, x, y, 0);
+                            current_type = randomType();
+                            setClass(current, current_type);
+                            }
+                        else if (map[x][y] === 0)
+                            {
+                            setType(map, x, y, current_type);
                             if (current_type > 0)
+                                {
                                 checkComb(map, current_type, x, y);
+                                }
+                            else if (current_type === -4) // matcher
+                                {
+                                matchAll(map, x, y);
+                                }
                             current_type = randomType();
                             setClass(current, current_type);
                             }
                         });
-                    cellsrow[c] = td;
                     }
-                map[r] = row;
-                cellsmap[r] = cellsrow;
                 }
             });
     </script>
@@ -138,18 +231,30 @@
             width: 100%;
             */
             }
-        #playzone tr
+        #playzone div
             {
             height: 40px;
-            }
-        #playzone td
-            {
             width: 40px;
             border: 1px solid black;
+            position: absolute;
+            }
+        .matcher
+            {
+            background-image: url('media/matcher.png');
+            }
+        .eraser
+            {
+            background-image: url('media/eraser.png');
+            }
+        .jumping_block
+            {
+            background-color: gray;
+            background-image: url('media/jumping_block.png');
             }
         .block
             {
             background-color: gray;
+            background-image: url('media/block.png');
             }
         .type_1
             {

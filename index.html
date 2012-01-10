@@ -122,10 +122,10 @@
                     {
                     map[x][y] = t;
                     checkComb(map, t, x, y);
-                    break;
+                    return true;
                     }
                 }
-            return possible_types;
+            return false;
             }
         function makeMap()
             {
@@ -155,6 +155,44 @@
                     }
                 }
             }
+        function getNeighboor(map, x, y)
+            {
+            var neighboor = [];
+            if (x>0) neighboor.push([x-1,y,map[x-1][y]]);
+            if (x<WIDTH-1) neighboor.push([x+1,y,map[x+1][y]]);
+            if (y>0) neighboor.push([x,y-1,map[x][y-1]]);
+            if (y<HEIGHT-1) neighboor.push([x,y+1,map[x][y+1]]);
+            return neighboor;
+            }
+        function blockMove(map, x, y)
+            {
+            var nei = getNeighboor(map, x, y);
+            for (var i = 0; i < nei.length; i++)
+                {
+                n = nei[i];
+                if (n[2] === 0)
+                    {
+                    console.debug(x,y,"move to",n[0],n[1]);
+                    setType(map, n[0], n[1], map[x][y]);
+                    setType(map, x, y, 0);
+                    break;
+                    }
+                }
+            }
+        function checkLooseCondition()
+            {
+            for (var x = 0; x < WIDTH; x ++)
+                {
+                for (var y = 0; y < HEIGHT ; y ++)
+                    {
+                    if (map[x][y] === 0)
+                        {
+                        return false;
+                        }
+                    }
+                }
+            return true;
+            }
         function doOneStep(changetype)
             {
             if (typeof changetype === "undefined") changetype = true;
@@ -164,6 +202,27 @@
                 setClass(current, current_type);
                 }
             dojo.attr("score", "innerHTML", score);
+            var blocks = [];
+            for (var x = 0; x < WIDTH; x ++)
+                {
+                for (var y = 0; y < HEIGHT ; y ++)
+                    {
+                    if (map[x][y] === -1)
+                        {
+                        blocks.push([x,y]);
+                        }
+                    }
+                }
+            for (var i = 0; i < blocks.length; i++)
+                {
+                b = blocks[i];
+                blockMove(map, b[0], b[1]);
+                }
+            if (checkLooseCondition())
+                {
+                var msg = dojo.create("div", {innerHTML: "Looser"}, dojo.body());
+                dojo.addClass(msg, "message");
+                }
             }
         dojo.addOnLoad(function()
             {
@@ -214,17 +273,25 @@
                             }
                         else if (map[x][y] === 0)
                             {
-                            setType(map, x, y, current_type);
                             if (current_type > 0)
                                 {
+                                setType(map, x, y, current_type);
                                 score += current_type;
                                 checkComb(map, current_type, x, y);
+                                doOneStep();
                                 }
                             else if (current_type === -4) // matcher
                                 {
-                                matchAll(map, x, y);
+                                if (matchAll(map, x, y))
+                                    {
+                                    doOneStep();
+                                    }
                                 }
-                            doOneStep();
+                            else if ((current_type === -1) || (current_type === -2))
+                                {
+                                setType(map, x, y, current_type);
+                                doOneStep();
+                                }
                             }
                         });
                     }
@@ -232,6 +299,9 @@
             });
     </script>
     <style type="text/css" media="screen">
+        .message
+            {
+            }
         #score
             {
             position: absolute;

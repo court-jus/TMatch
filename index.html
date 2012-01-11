@@ -15,11 +15,14 @@
             "-4": "matcher",
             "-5": "tombstone",
             "-6": "bigtombstone",
+            "-7": "biggesttombstone",
             };
         var WIDTH = 6;
         var HEIGHT = 6;
         var CELL_WIDTH = 101;
         var CELL_HEIGHT = 81;
+        var LEFT_SHIFT = 121;
+        var BOTTOM_SHIFT = 10;
         var current_type = 0;
         var current = null;
         var score = 0;
@@ -142,16 +145,20 @@
                     if (typeof map[x] === "undefined") map[x] = [];
                     map[x][y] = 0;
                     if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
-                    cellsmap[x][y] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"style":"top:"+(CELL_HEIGHT*y+50)+";left:"+(CELL_WIDTH*x+200)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
+                    cellsmap[x][y] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
                     setClass(cellsmap[x][y], 0);
                     }
                 }
             }
         function randomizeMap()
             {
-            setType(map, 0, 0, -7);
-            setType(map, 1, 0, -7);
+            /*
+            setType(map, 0, 0, -5);
+            setType(map, 1, 0, -5);
+            setType(map, 3, 3, -5);
+            setType(map, 1, 1, -5);
             return;
+            */
             var percent = 0.7;
             for (var x = 0; x < WIDTH; x ++)
                 {
@@ -259,7 +266,7 @@
                 }
             if (checkLooseCondition())
                 {
-                var msg = dojo.create("div", {innerHTML: "Looser"}, dojo.body());
+                var msg = dojo.create("div", {innerHTML: "Looser"}, "container");
                 dojo.addClass(msg, "message");
                 }
             dojo.attr("score", "innerHTML", score);
@@ -270,10 +277,10 @@
             //current_type = randomType();
             current_type = -4;
             var container = dojo.create("div", {id: "container"}, dojo.body());
-            dojo.create("div", {id: "score", innerHTML: score}, dojo.body());
-            current = dojo.create("div", {id: "current"}, container);
+            current = dojo.create("div", {id: "current", innerHTML:"Current"}, container);
+            dojo.create("div", {id: "score", innerHTML: score}, container);
             setClass(current, current_type);
-            var stash = dojo.create("div", {id: "stash"}, container);
+            var stash = dojo.create("div", {id: "stash", innerHTML:"Stash"}, container);
             dojo.connect(stash, "onclick", function(evt)
                 {
                 var old_stash = current_stash;
@@ -302,6 +309,13 @@
                         x = parseInt(dojo.attr(this, "tmatchx"));
                         y = parseInt(dojo.attr(this, "tmatchy"));
                         celltype = map[x][y];
+                        console.debug("click on",x,y,celltype, evt, evt.offsetY);
+                        if ((evt.offsetY < 50) && (y > 0))
+                            {
+                            y-=1;
+                            celltype = map[x][y];
+                            console.debug("click on", x, y, celltype, evt);
+                            }
                         if ((current_type === -3) && (celltype !== 0)) // eraser
                             {
                             if (celltype > 0)
@@ -338,8 +352,25 @@
                     }
                 }
             });
+        function showdoc(iddoc)
+            {
+            dojo.query(".doc").style("display", "none");
+            dojo.query("#doc" + iddoc).style("display", "block");
+            }
     </script>
     <style type="text/css" media="screen">
+        body
+            {
+            margin: 0px;
+            padding: 0px;
+            }
+        #container
+            {
+            width: 727px;
+            position: relative;
+            margin: auto;
+            height: 550px;
+            }
         .message
             {
             }
@@ -353,22 +384,22 @@
         #current
             {
             position: absolute;
-            top: 50px;
-            left: 30px;
+            bottom: 191px;
+            left: 10px;
             height: 171px;
             width: 101px;
             border: 1px solid black;
             text-align: center;
-            vertical-align: middle;
             }
         #stash
             {
             position: absolute;
-            top: 221px;
-            left: 30px;
+            bottom: 10px;
+            left: 10px;
             height: 171px;
             width: 101px;
             border: 1px solid black;
+            text-align: center;
             }
         #playzone
             {
@@ -378,11 +409,11 @@
             }
         #playzone div
             {
-            padding-top: 20px;
-            height: 101px;
+            height: 171px;
             width: 101px;
             position: absolute;
             background-position: bottom;
+            background-repeat: no-repeat;
             }
         .matcher
             {
@@ -392,14 +423,17 @@
             {
             background-image: url('media/Key.png');
             }
+        .biggesttombstone
+            {
+            background-image: url('media/Orange Diamond.png');
+            }
         .bigtombstone
             {
-            background-image: url('media/Wall Block.png');
+            background-image: url('media/Blue Diamond.png');
             }
         .tombstone
             {
-            background-image: url('media/Wall Block.png');
-            background-position: 0px -46px !important;
+            background-image: url('media/Green Diamond.png');
             }
         .bug
             {
@@ -446,8 +480,102 @@
             {
             background-image: url('media/type_8.png');
             }
+        #documentation
+            {
+            position: absolute;
+            left: 10px;
+            top: 560px;
+            width: 100%;
+            }
+        #documentation .doc
+            {
+            position: relative;
+            margin: auto;
+            width: 727; /*10+101+10+101*6*/
+            border: 3px inset black;
+            padding-bottom: 25px;
+            }
+        #documentat .doc img
+            {
+            margin: auto;
+            }
+        .prevdoc
+            {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            }
+        .frdoc
+            {
+            position: absolute;
+            bottom: 5px;
+            left: 360px;
+            }
+        .nextdoc
+            {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            }
+        .centercontainer
+            {
+            text-align: center;
+            width: 100%;
+            }
     </style>
 </head>
 <body>
+    <div id="documentation">
+        <div id="doc1" class="doc">
+            <p>The goal of the game is to keep the board from filling. It's inspired by <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> from <a target="_blank" href="http://www.spryfox.com/">Spryfox</a>, so you won't be lost if you played this one before.</p>
+            <p>Each turn you will be presented a new item to place in the "Current" box on the left. Click on the cell where you want to place this item.</p>
+            <p>The "Stash" under the "Current" box allows you to store an item for later use.</p>
+            <div class="frdoc"><a href="#" onclick="showdoc(11);">Français</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(2);">Next &rarr;</a></div>
+        </div>
+        <div id="doc2" style="display:none;" class="doc">
+            <p>You can combine 3 or more blocks into a "bigger" one. The order is :</p>
+            <div class="centercontainer">
+                <img src="media/BlocksExplanation.png" />
+            </div>
+            <div class="prevdoc"><a href="#" onclick="showdoc(1);">Prev &larr;</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc(12);">Français</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(3);">Next &rarr;</a></div>
+        </div>
+        <div id="doc3" style="display: none;" class="doc">
+            <p>Sometimes, you have to place "Bugs". Bugs move freely on the board an prevent you from placing items. To kill bugs, just confine them in an area without any free cell. They will then change into green diamond. The diamonds follow the same scheme as blocks :</p>
+            <div class="centercontainer">
+                <img src="media/BugsExplanation.png" />
+            </div>
+            <div class="prevdoc"><a href="#" onclick="showdoc(2);">Prev &larr;</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc(13);">Français</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(4);">Next &rarr;</a></div>
+        </div>
+        <div id="doc11" class="doc" style="display:none;">
+            <p>Le but du jeu est d'empêcher le jeu de se remplir. Le jeu est inspiré de <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> du studio <a target="_blank" href="http://www.spryfox.com/">Spryfox</a>, vous ne serez donc pas perdu si vous y avez déjà joué.</p>
+            <p>A chaque tour, le jeu vous présente un nouvel élément dans la zone "Current" à gauche. Cliquez dans l'espace de jeu sur la cellule où vous voulez placer cet élément.</p>
+            <p>La zone "Stash" sous la zone "Current" vous permet de conserver un élément que vous ne voulez pas utiliser immédiatement.</p>
+            <div class="frdoc"><a href="#" onclick="showdoc(1);">English</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(12);">Next &rarr;</a></div>
+        </div>
+        <div id="doc12" style="display:none;" class="doc">
+            <p>Vous pouvez combiner 3 blocs ou plus en un bloc plus "important". Voici l'ordre de combinaison :</p>
+            <div class="centercontainer">
+                <img src="media/BlocksExplanation.png" />
+            </div>
+            <div class="prevdoc"><a href="#" onclick="showdoc(11);">Prev &larr;</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc(2);">English</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(13);">Next &rarr;</a></div>
+        </div>
+        <div id="doc13" style="display: none;" class="doc">
+            <p>Parfois, vous devez placer des "Insectes". Ils se déplacent librement sur le plateau et vous empêchent de positionner d'autres éléments. Pour les tuer, il suffit de les enfermer dans une zone ne contenant plus aucune cellule libre. Ils se changent alors en diamant vert. Les diamants peuvent se combiner comme les blocs :</p>
+            <div class="centercontainer">
+                <img src="media/BugsExplanation.png" />
+            </div>
+            <div class="prevdoc"><a href="#" onclick="showdoc(12);">Prev &larr;</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc(3);">English</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(14);">Next &rarr;</a></div>
+        </div>
+    </div>
 </body>
 </html>

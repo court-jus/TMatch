@@ -13,6 +13,8 @@
             "-2": "jumping_bug",
             "-3": "eraser",
             "-4": "matcher",
+            "-5": "tombstone",
+            "-6": "bigtombstone",
             };
         var WIDTH = 6;
         var HEIGHT = 6;
@@ -91,17 +93,19 @@
         function checkComb(map, t, x, y)
             {
             var comb = findEquiv(map, t, x, y);
+            var newtype = t + 1;
+            if (t < -4) newtype = t - 1;
             if (comb.length > 2)
                 {
                 for (var i = 0; i < comb.length; i ++)
                     {
                     u = comb[i][0]; v = comb[i][1];
-                    score += t;
+                    score += Math.abs(t);
                     setType(map, u, v, 0);
                     }
-                setType(map, x, y, t + 1);
-                checkComb(map, t + 1, x, y);
-                score += (t+1)*t*comb.length;
+                setType(map, x, y, newtype);
+                checkComb(map, newtype, x, y);
+                score += Math.abs((t+1)*t)*comb.length;
                 }
             }
         function matchAll(map, x, y)
@@ -118,7 +122,7 @@
             for(var i = 0; i < possible_types.length ; i++)
                 {
                 t = possible_types[i];
-                if (t < 1) continue;
+                if ((t < 1) && (t > -5)) continue; // we can match regular blocks and tombstones
                 equiv = findEquiv(map, t, x, y, [], true);
                 if (equiv.length > 2)
                     {
@@ -145,6 +149,9 @@
             }
         function randomizeMap()
             {
+            setType(map, 0, 0, -7);
+            setType(map, 1, 0, -7);
+            return;
             var percent = 0.7;
             for (var x = 0; x < WIDTH; x ++)
                 {
@@ -216,8 +223,9 @@
             for (var i = 0; i < other_bugs.length; i ++)
                 {
                 ob = other_bugs[i];
-                setType(map, ob[0], ob[1], 0);
+                setType(map, ob[0], ob[1], -5);
                 }
+            checkComb(map, -5, x, y);
             return other_bugs.length;
             }
         function doOneStep(changetype)
@@ -259,7 +267,8 @@
         dojo.addOnLoad(function()
             {
             //var map = [];
-            current_type = randomType();
+            //current_type = randomType();
+            current_type = -4;
             var container = dojo.create("div", {id: "container"}, dojo.body());
             dojo.create("div", {id: "score", innerHTML: score}, dojo.body());
             current = dojo.create("div", {id: "current"}, container);
@@ -382,6 +391,15 @@
         .eraser
             {
             background-image: url('media/Key.png');
+            }
+        .bigtombstone
+            {
+            background-image: url('media/Wall Block.png');
+            }
+        .tombstone
+            {
+            background-image: url('media/Wall Block.png');
+            background-position: 0px -46px !important;
             }
         .bug
             {

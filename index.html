@@ -195,6 +195,31 @@
                 }
             return true;
             }
+        function checkBugKill(map, x, y)
+            {
+            other_bugs = findEquiv(map, -2, x, y);
+            console.debug(other_bugs);
+            for (var i = 0; i < other_bugs.length; i ++)
+                {
+                ob = other_bugs[i];
+                nei = getNeighboor(map, ob[0], ob[1]);
+                for (var j = 0; j < nei.length; j ++)
+                    {
+                    n = nei[j];
+                    if (map[n[0]][n[1]] == 0)
+                        {
+                        console.debug("this bug is free to move", ob[0], ob[1]);
+                        return 0;
+                        }
+                    }
+                }
+            for (var i = 0; i < other_bugs.length; i ++)
+                {
+                ob = other_bugs[i];
+                setType(map, ob[0], ob[1], 0);
+                }
+            return other_bugs.length;
+            }
         function doOneStep(changetype)
             {
             if (typeof changetype === "undefined") changetype = true;
@@ -203,7 +228,6 @@
                 current_type = randomType();
                 setClass(current, current_type);
                 }
-            dojo.attr("score", "innerHTML", score);
             var bugs = [];
             for (var x = 0; x < WIDTH; x ++)
                 {
@@ -218,6 +242,11 @@
             for (var i = 0; i < bugs.length; i++)
                 {
                 b = bugs[i];
+                killcount = checkBugKill(map, b[0], b[1]);
+                if (killcount > 0)
+                    {
+                    score += killcount * 100;
+                    }
                 bugMove(map, b[0], b[1]);
                 }
             if (checkLooseCondition())
@@ -225,6 +254,7 @@
                 var msg = dojo.create("div", {innerHTML: "Looser"}, dojo.body());
                 dojo.addClass(msg, "message");
                 }
+            dojo.attr("score", "innerHTML", score);
             }
         dojo.addOnLoad(function()
             {
@@ -262,18 +292,18 @@
                         {
                         x = parseInt(dojo.attr(this, "tmatchx"));
                         y = parseInt(dojo.attr(this, "tmatchy"));
-                        if ((current_type === -3) && (map[x][y] !== 0)) // eraser
+                        celltype = map[x][y];
+                        if ((current_type === -3) && (celltype !== 0)) // eraser
                             {
-                            t = map[x][y];
-                            if (t > 0)
+                            if (celltype > 0)
                                 {
-                                score -= t;
+                                score -= celltype;
                                 }
-                            score += -10 * t;
+                            score += -10 * celltype;
                             setType(map, x, y, 0);
                             doOneStep();
                             }
-                        else if (map[x][y] === 0)
+                        else if (celltype === 0)
                             {
                             if (current_type > 0)
                                 {

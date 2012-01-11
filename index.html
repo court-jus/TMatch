@@ -9,8 +9,8 @@
         var cellsmap = [];
         var current_stash = 0;
         var CLASSES = {
-            "-1": "block",
-            "-2": "jumping_block",
+            "-1": "bug",
+            "-2": "jumping_bug",
             "-3": "eraser",
             "-4": "matcher",
             };
@@ -37,11 +37,11 @@
             if (typeof randommap === "undefined") randommap = false;
             var i = Math.random() * 100.0;
             if (i > 99) return 4;       // ~hut
-            if ((i > 98) && !randommap) return -2;      // ~ninja
+            if ((i > 98) && !randommap) return -1;      // ~ninja
             if (i > 97) return 3;       // ~tree
             if ((i > 95) && !randommap) return -4;      // ~crystal
             if ((i > 92) && !randommap) return -3;      // ~bot
-            if (i > 77) return -1;      // ~bear
+            if (i > 77) return -2;      // ~bear
             if (i > 52) return 2;       // ~bush
             return 1;                   // ~grass
             }
@@ -166,15 +166,15 @@
             if (y<HEIGHT-1) neighboor.push([x,y+1,map[x][y+1]]);
             return neighboor;
             }
-        function blockMove(map, x, y)
+        function bugMove(map, x, y)
             {
             var nei = getNeighboor(map, x, y);
+            nei.sort(function() { return (Math.round(Math.random())-0.5); });
             for (var i = 0; i < nei.length; i++)
                 {
                 n = nei[i];
                 if (n[2] === 0)
                     {
-                    console.debug(x,y,"move to",n[0],n[1]);
                     setType(map, n[0], n[1], map[x][y]);
                     setType(map, x, y, 0);
                     break;
@@ -204,21 +204,21 @@
                 setClass(current, current_type);
                 }
             dojo.attr("score", "innerHTML", score);
-            var blocks = [];
+            var bugs = [];
             for (var x = 0; x < WIDTH; x ++)
                 {
                 for (var y = 0; y < HEIGHT ; y ++)
                     {
                     if (map[x][y] === -2)
                         {
-                        blocks.push([x,y]);
+                        bugs.push([x,y]);
                         }
                     }
                 }
-            for (var i = 0; i < blocks.length; i++)
+            for (var i = 0; i < bugs.length; i++)
                 {
-                b = blocks[i];
-                blockMove(map, b[0], b[1]);
+                b = bugs[i];
+                bugMove(map, b[0], b[1]);
                 }
             if (checkLooseCondition())
                 {
@@ -339,9 +339,9 @@
             }
         #playzone div
             {
-            height: 171px;
+            padding-top: 20px;
+            height: 101px;
             width: 101px;
-            border: 1px solid gray;
             position: absolute;
             background-position: bottom;
             }
@@ -353,13 +353,18 @@
             {
             background-image: url('media/Key.png');
             }
-        .block
+        .bug
             {
             background-image: url('media/Door Tall Closed.png');
+            background-position: 0px -20px !important;
             }
-        .jumping_block
+        .jumping_bug
             {
-            background-image: url('media/Enemy Bug.png');
+            background-image: url('media/Water Bug2.png');
+            }
+        .empty
+            {
+            background-image: url('media/Water Block.png');
             }
         .type_1
             {

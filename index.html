@@ -153,11 +153,18 @@
         function randomizeMap()
             {
             /*
-            setType(map, 0, 0, -5);
-            setType(map, 1, 0, -5);
-            setType(map, 3, 3, -5);
-            setType(map, 1, 1, -5);
+            *
+            setType(map, 0, 0, -7);
+            setType(map, 2, 1, -5);
+            setType(map, 0, 1, -6);
+            setType(map, 1, 1, -6);
+            setType(map, 3, 0, 1);
+            setType(map, 3, 1, 1);
+            setType(map, 0, 2, 1);
+            setType(map, 1, 2, 1);
+            setType(map, 2, 2, 1);
             return;
+            /*
             */
             var percent = 0.7;
             for (var x = 0; x < WIDTH; x ++)
@@ -212,7 +219,6 @@
         function checkBugKill(map, x, y)
             {
             other_bugs = findEquiv(map, -2, x, y);
-            console.debug(other_bugs);
             for (var i = 0; i < other_bugs.length; i ++)
                 {
                 ob = other_bugs[i];
@@ -222,7 +228,6 @@
                     n = nei[j];
                     if (map[n[0]][n[1]] == 0)
                         {
-                        console.debug("this bug is free to move", ob[0], ob[1]);
                         return 0;
                         }
                     }
@@ -232,7 +237,7 @@
                 ob = other_bugs[i];
                 setType(map, ob[0], ob[1], -5);
                 }
-            checkComb(map, -5, x, y);
+            checkComb(map, -5, x, y, map[2][0],map[2][1]);
             return other_bugs.length;
             }
         function doOneStep(changetype)
@@ -257,12 +262,19 @@
             for (var i = 0; i < bugs.length; i++)
                 {
                 b = bugs[i];
-                killcount = checkBugKill(map, b[0], b[1]);
-                if (killcount > 0)
+                // We check again the type in case this bug was destroyed by another one
+                if (map[b[0]][b[1]] === -2)
                     {
-                    score += killcount * 100;
+                    killcount = checkBugKill(map, b[0], b[1]);
+                    if (killcount > 0)
+                        {
+                        score += killcount * 100;
+                        }
+                    else
+                        {
+                        bugMove(map, b[0], b[1]);
+                        }
                     }
-                bugMove(map, b[0], b[1]);
                 }
             if (checkLooseCondition())
                 {
@@ -274,8 +286,7 @@
         dojo.addOnLoad(function()
             {
             //var map = [];
-            //current_type = randomType();
-            current_type = -4;
+            current_type = randomType();
             var container = dojo.create("div", {id: "container"}, dojo.body());
             current = dojo.create("div", {id: "current", innerHTML:"Current"}, container);
             dojo.create("div", {id: "score", innerHTML: score}, container);
@@ -309,12 +320,10 @@
                         x = parseInt(dojo.attr(this, "tmatchx"));
                         y = parseInt(dojo.attr(this, "tmatchy"));
                         celltype = map[x][y];
-                        console.debug("click on",x,y,celltype, evt, evt.offsetY);
                         if ((evt.offsetY < 50) && (y > 0))
                             {
                             y-=1;
                             celltype = map[x][y];
-                            console.debug("click on", x, y, celltype, evt);
                             }
                         if ((current_type === -3) && (celltype !== 0)) // eraser
                             {

@@ -26,6 +26,7 @@
         var current_type = 0;
         var current = null;
         var score = 0;
+        var looser = false;
         function sort_unique(arr)
             {
             arr = arr.sort();
@@ -278,6 +279,7 @@
                 }
             if (checkLooseCondition())
                 {
+                looser = true;
                 var msg = dojo.create("div", {innerHTML: "Looser"}, "container");
                 dojo.addClass(msg, "message");
                 }
@@ -294,6 +296,7 @@
             var stash = dojo.create("div", {id: "stash", innerHTML:"Stash"}, container);
             dojo.connect(stash, "onclick", function(evt)
                 {
+                if (looser) return;
                 var old_stash = current_stash;
                 current_stash = current_type;
                 setClass(stash, current_stash);
@@ -317,6 +320,7 @@
                     {
                     dojo.connect(cellsmap[x][y], "onclick", function(evt)
                         {
+                        if (looser) return;
                         x = parseInt(dojo.attr(this, "tmatchx"));
                         y = parseInt(dojo.attr(this, "tmatchy"));
                         celltype = map[x][y];

@@ -493,7 +493,7 @@
             margin: auto;
             width: 727; /*10+101+10+101*6*/
             border: 3px inset black;
-            padding-bottom: 25px;
+            padding-top: 25px;
             }
         #documentat .doc img
             {
@@ -502,19 +502,19 @@
         .prevdoc
             {
             position: absolute;
-            bottom: 5px;
+            top: 5px;
             left: 5px;
             }
         .frdoc
             {
             position: absolute;
-            bottom: 5px;
+            top: 5px;
             left: 360px;
             }
         .nextdoc
             {
             position: absolute;
-            bottom: 5px;
+            top: 5px;
             right: 5px;
             }
         .centercontainer
@@ -526,55 +526,106 @@
 </head>
 <body>
     <div id="documentation">
-        <div id="doc1" class="doc">
+        <div id="doc0" style="display:block;" class="doc">
+            <h1>Triple Match</h1>
+            <p>Welcome ! Bienvenue !</p>
+            <div class="prevdoc"><a href="#" onclick="showdoc(11);">Lire la documentation en français</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(1);">Read the english documentation</a></div>
+        </div>
+        <div id="doc1" style="display:none;" class="doc">
+            <h1>Triple Match</h1>
             <p>The goal of the game is to keep the board from filling. It's inspired by <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> from <a target="_blank" href="http://www.spryfox.com/">Spryfox</a>, so you won't be lost if you played this one before.</p>
             <p>Each turn you will be presented a new item to place in the "Current" box on the left. Click on the cell where you want to place this item.</p>
-            <p>The "Stash" under the "Current" box allows you to store an item for later use.</p>
+            <p>The "Stash" under the "Current" box allows you to store an item for later use. Click on the stash to move the current item into the stash (and recover the stashed item).</p>
+            <div class="prevdoc"><a href="#" onclick="showdoc(0);">Main menu</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(11);">Français</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc(2);">Next &rarr;</a></div>
         </div>
         <div id="doc2" style="display:none;" class="doc">
+            <h1>Combination</h1>
             <p>You can combine 3 or more blocks into a "bigger" one. The order is :</p>
             <div class="centercontainer">
                 <img src="media/BlocksExplanation.png" />
             </div>
-            <div class="prevdoc"><a href="#" onclick="showdoc(1);">Prev &larr;</a></div>
+            <div class="prevdoc"><a href="#" onclick="showdoc(1);">&larr; Prev</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(12);">Français</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc(3);">Next &rarr;</a></div>
         </div>
         <div id="doc3" style="display: none;" class="doc">
+            <h1>Annoying Bugs</h1>
             <p>Sometimes, you have to place "Bugs". Bugs move freely on the board an prevent you from placing items. To kill bugs, just confine them in an area without any free cell. They will then change into green diamond. The diamonds follow the same scheme as blocks :</p>
             <div class="centercontainer">
                 <img src="media/BugsExplanation.png" />
             </div>
-            <div class="prevdoc"><a href="#" onclick="showdoc(2);">Prev &larr;</a></div>
+            <div class="prevdoc"><a href="#" onclick="showdoc(2);">&larr; Prev</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(13);">Français</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc(4);">Next &rarr;</a></div>
         </div>
+        <div id="doc4" style="display: none;" class="doc">
+            <h1>Specials</h1>
+            <p class="matcher" style="vertical-align: middle; padding-left: 100px;background-position: 0 -55; height: 90; background-repeat: no-repeat;">The "star" is a joker. It matches any other block or diamond. If two or more matches are possible, the "smaller" match will be done.</p>
+            <p class="eraser" style="vertical-align: middle; padding-left: 100px;background-position: 0 -55; height: 90; background-repeat: no-repeat;">The "key" is an eraser. It removes anything.</p>
+            <div class="prevdoc"><a href="#" onclick="showdoc(3);">&larr; Prev</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc(14);">Français</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(9);">Next &rarr;</a></div>
+        </div>
+        <div id="doc9" style="display: none;" class="doc credits">
+            <h1>Credits</h1>
+            <ul>
+                <li>Code : <a target="_blank" href="http://about.me/courtjus/">Ghislain "court-jus" Lévêque</a></li>
+                <li>Inspiration : <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> from <a target="_blank" href="http://www.spryfox.com/">Spryfox</a> (I guess it was inspired by older stuff, so I thank them too)</li>
+                <li>Graphics : <a target="_blank" href="http://www.lostgarden.com/2007/05/dancs-miraculously-flexible-game.html">PlanetCute</a> from <a target="_blank" href="http://www.lostgarden.com/">Lost Garden</a></li>
+            </ul>
+            <div class="prevdoc"><a href="#" onclick="showdoc(4);">&larr; Prev</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc(19);">Français</a></div>
+        </div>
+        <!-- French -->
         <div id="doc11" class="doc" style="display:none;">
+            <h1>Triple Match</h1>
             <p>Le but du jeu est d'empêcher le jeu de se remplir. Le jeu est inspiré de <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> du studio <a target="_blank" href="http://www.spryfox.com/">Spryfox</a>, vous ne serez donc pas perdu si vous y avez déjà joué.</p>
             <p>A chaque tour, le jeu vous présente un nouvel élément dans la zone "Current" à gauche. Cliquez dans l'espace de jeu sur la cellule où vous voulez placer cet élément.</p>
-            <p>La zone "Stash" sous la zone "Current" vous permet de conserver un élément que vous ne voulez pas utiliser immédiatement.</p>
+            <p>La zone "Stash" sous la zone "Current" vous permet de conserver un élément que vous ne voulez pas utiliser immédiatement. Cliquez sur le "Stash" pour y stocker l'élément courant (et récupérer l'élément stocké).</p>
+            <div class="prevdoc"><a href="#" onclick="showdoc(0);">Menu principal</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(1);">English</a></div>
-            <div class="nextdoc"><a href="#" onclick="showdoc(12);">Next &rarr;</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(12);">Suivant &rarr;</a></div>
         </div>
         <div id="doc12" style="display:none;" class="doc">
+            <h1>Combinaisons</h1>
             <p>Vous pouvez combiner 3 blocs ou plus en un bloc plus "important". Voici l'ordre de combinaison :</p>
             <div class="centercontainer">
                 <img src="media/BlocksExplanation.png" />
             </div>
-            <div class="prevdoc"><a href="#" onclick="showdoc(11);">Prev &larr;</a></div>
+            <div class="prevdoc"><a href="#" onclick="showdoc(11);">&larr; Précédent</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(2);">English</a></div>
-            <div class="nextdoc"><a href="#" onclick="showdoc(13);">Next &rarr;</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(13);">Suivant &rarr;</a></div>
         </div>
         <div id="doc13" style="display: none;" class="doc">
+            <h1>Insectes</h1>
             <p>Parfois, vous devez placer des "Insectes". Ils se déplacent librement sur le plateau et vous empêchent de positionner d'autres éléments. Pour les tuer, il suffit de les enfermer dans une zone ne contenant plus aucune cellule libre. Ils se changent alors en diamant vert. Les diamants peuvent se combiner comme les blocs :</p>
             <div class="centercontainer">
                 <img src="media/BugsExplanation.png" />
             </div>
-            <div class="prevdoc"><a href="#" onclick="showdoc(12);">Prev &larr;</a></div>
+            <div class="prevdoc"><a href="#" onclick="showdoc(12);">&larr; Précédent</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(3);">English</a></div>
-            <div class="nextdoc"><a href="#" onclick="showdoc(14);">Next &rarr;</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(14);">Suivant &rarr;</a></div>
+        </div>
+        <div id="doc14" style="display: none;" class="doc">
+            <h1>Éléments spéciaux</h1>
+            <p class="matcher" style="vertical-align: middle; padding-left: 100px;background-position: 0 -55; height: 90; background-repeat: no-repeat;">"L'étoile" est un joker. Elle peut se bombiner avec n'importe quel bloc ou n'importe quel diamant. Si deux combinaisons (ou plus) sont possibles, la "plus petite" sera choisie.</p>
+            <p class="eraser" style="vertical-align: middle; padding-left: 100px;background-position: 0 -55; height: 90; background-repeat: no-repeat;">La "clé" est une gomme. Elle peut enlever n'importe quel élément.</p>
+            <div class="prevdoc"><a href="#" onclick="showdoc(13);">&larr; Précédent</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc(4);">English</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(19);">Suivant &rarr;</a></div>
+        </div>
+        <div id="doc19" style="display: none;" class="doc credits">
+            <h1>Crédits</h1>
+            <ul>
+                <li>Code : <a target="_blank" href="http://about.me/courtjus/">Ghislain "court-jus" Lévêque</a></li>
+                <li>Inspiration : <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> de <a target="_blank" href="http://www.spryfox.com/">Spryfox</a> (Je suppose qu'ils ont eux-mêmes été inspirés par d'autres que je remercie aussi)</li>
+                <li>Graphismes : <a target="_blank" href="http://www.lostgarden.com/2007/05/dancs-miraculously-flexible-game.html">PlanetCute</a> de <a target="_blank" href="http://www.lostgarden.com/">Lost Garden</a></li>
+            </ul>
+            <div class="prevdoc"><a href="#" onclick="showdoc(14);">&larr; Précédent</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc(9);">English</a></div>
         </div>
     </div>
 </body>

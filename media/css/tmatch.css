@@ -38,13 +38,31 @@
     border: 1px solid black;
     text-align: center;
     }
+#personscontainer
+    {
+    /*
+    width: 100%;
+    */
+    }
+#personscontainer div
+    {
+    height: 53px;
+    width: 40px;
+    position: absolute;
+    background-position: bottom;
+    background-repeat: no-repeat;
+    }
+.person1
+    {
+    background-image: url("../img/person1.png");
+    }
 #playzone
     {
     /*
     width: 100%;
     */
     }
-#playzone div
+#playzone div.mapcell
     {
     height: 171px;
     width: 101px;

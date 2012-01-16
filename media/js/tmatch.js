@@ -1,30 +1,36 @@
-var map = [];
-var cellsmap = [];
-var current_stash = 0;
-var CLASSES = {
-    "-1": "bug",
-    "-2": "jumping_bug",
-    "-3": "eraser",
-    "-4": "matcher",
-    "-5": "tombstone",
-    "-6": "bigtombstone",
-    "-7": "biggesttombstone",
-    };
-var WIDTH = 6;
-var HEIGHT = 6;
-var CELL_WIDTH = 101;
-var CELL_HEIGHT = 81;
-var LEFT_SHIFT = 121;
-var BOTTOM_SHIFT = 10;
-var current_type = 0;
-var current = null;
-var score = 0;
-var looser = false;
-var lang_code = obtenirCodeLangueNavig();
+/* constants, globals */
+    var map = [];
+    var cellsmap = [];
+    var personsmap = [];
+    var current_stash = 0;
+    var PCLASSES = {
+        "1" : "person1",
+        };
+    var CLASSES = {
+        "-1": "bug",
+        "-2": "jumping_bug",
+        "-3": "eraser",
+        "-4": "matcher",
+        "-5": "tombstone",
+        "-6": "bigtombstone",
+        "-7": "biggesttombstone",
+        };
+    var WIDTH = 6;
+    var HEIGHT = 6;
+    var CELL_WIDTH = 101;
+    var CELL_HEIGHT = 81;
+    var LEFT_SHIFT = 121;
+    var BOTTOM_SHIFT = 10;
+    var current_type = 0;
+    var current = null;
+    var score = 0;
+    var looser = false;
+    var lang_code = obtenirCodeLangueNavig();
 /* Helpers */
 function setClass(node, t)
     {
     dojo.removeClass(node);
+    dojo.addClass(node, "mapcell");
     if (t === 0)
         {
         dojo.addClass(node, "empty");
@@ -48,6 +54,10 @@ function setType(map, x, y, t)
 function coordsToI(x, y)
     {
     return y*WIDTH + x;
+    }
+function personCoordToDomCoord(x, y)
+    {
+    return [(CELL_WIDTH*x+LEFT_SHIFT+30), (CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT+50)];
     }
 function findEquiv(map, t, x, y, seen, ignore)
     {
@@ -78,14 +88,36 @@ function randomType(randommap)
     if (i > 52) return 2;       // ~bush
     return 1;                   // ~grass
     }
-function getNeighboor(map, x, y)
+function getNeighboor(map, x, y, diagonals)
     {
+    if (typeof diagonals === "undefined") diagonals = false;
     var neighboor = [];
-    if (x>0) neighboor.push([x-1,y,map[x-1][y]]);
-    if (x<WIDTH-1) neighboor.push([x+1,y,map[x+1][y]]);
-    if (y>0) neighboor.push([x,y-1,map[x][y-1]]);
-    if (y<HEIGHT-1) neighboor.push([x,y+1,map[x][y+1]]);
+    if (x>0)                       neighboor.push([x-1, y,   map[x-1][y]]);
+    if (x<WIDTH-1)                 neighboor.push([x+1, y,   map[x+1][y]]);
+    if (y>0)                       neighboor.push([x,   y-1, map[x]  [y-1]]);
+    if (y<HEIGHT-1)                neighboor.push([x,   y+1, map[x]  [y+1]]);
+
+    /* diagonals */
+    if (diagonals)
+        {
+        if ((x>0) && (y>0))              neighboor.push([x-1, y-1, map[x-1][y-1]]);
+        if ((x>0) && (y<HEIGHT-1))       neighboor.push([x-1, y+1, map[x-1][y+1]]);
+        if ((x<WIDTH-1) && (y>0))        neighboor.push([x+1, y-1, map[x+1][y-1]]);
+        if ((x<WIDTH-1) && (y<HEIGHT-1)) neighboor.push([x+1, y+1, map[x+1][y+1]]);
+        }
     return neighboor;
+    }
+function addPerson(x, y, t)
+    {
+    domcoords = personCoordToDomCoord(x,y);
+    p = {
+        type: t,
+        domnode: dojo.create("div", {"style":"bottom:"+domcoords[1]+";left:"+domcoords[0]+";",innerHTML:"&nbsp;"}, dojo.byId("personscontainer")),
+        x:x,
+        y:y
+        };
+    dojo.addClass(p["domnode"], PCLASSES[t]);
+    personsmap.push(p);
     }
 
 /* Map functions */
@@ -95,8 +127,10 @@ function makeMap()
         {
         for (var y = 0; y < HEIGHT; y++)
             {
+            /* map */
             if (typeof map[x] === "undefined") map[x] = [];
             map[x][y] = 0;
+            /* cellsmap */
             if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
             cellsmap[x][y] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
             setClass(cellsmap[x][y], 0);
@@ -106,16 +140,17 @@ function makeMap()
 function randomizeMap()
     {
     /*
-    *
+    */
     setType(map, 0, 0, -7);
     setType(map, 2, 1, -5);
     setType(map, 0, 1, -6);
     setType(map, 1, 1, -6);
-    setType(map, 3, 0, 1);
+    setType(map, 3, 3, 1);
     setType(map, 3, 1, 1);
     setType(map, 0, 2, 1);
     setType(map, 1, 2, 1);
     setType(map, 2, 2, 1);
+    addPerson(3,3,1);
     return;
     /*
     */
@@ -191,6 +226,14 @@ function bugMove(map, x, y)
             }
         }
     }
+function personMoveTo(p, x, y)
+    {
+    p['x'] = x;
+    p['y'] = y;
+    domcoords = personCoordToDomCoord(x,y);
+    dojo.style(p['domnode'], "bottom", domcoords[1]);
+    dojo.style(p['domnode'], "left", domcoords[0]);
+    }
 function checkLooseCondition()
     {
     for (var x = 0; x < WIDTH; x ++)
@@ -229,6 +272,25 @@ function checkBugKill(map, x, y)
     checkComb(map, -5, x, y, map[2][0],map[2][1]);
     return other_bugs.length;
     }
+function doPersonStep(p)
+    {
+    var nei = getNeighboor(map, p['x'],p['y'],true);
+    var moveOrNot = (Math.random() > 0.5);
+    console.debug(p, nei, moveOrNot);
+    if ((moveOrNot) || (map[p['x']][p['y']] === 0)) // always move if on water
+        {
+        nei.sort(function() { return (Math.round(Math.random())-0.5); });
+        for (var i = 0; i < nei.length; i++)
+            {
+            n = nei[i];
+            if (n[2] > 0)
+                {
+                personMoveTo(p, n[0], n[1]);
+                break;
+                }
+            }
+        }
+    }
 function doOneStep(changetype)
     {
     if (typeof changetype === "undefined") changetype = true;
@@ -264,6 +326,11 @@ function doOneStep(changetype)
                 bugMove(map, b[0], b[1]);
                 }
             }
+        }
+    for (var i = 0; i < personsmap.length; i++)
+        {
+        p = personsmap[i];
+        if (p["type"] !== 0) doPersonStep(p);
         }
     if (checkLooseCondition())
         {
@@ -302,6 +369,7 @@ dojo.addOnLoad(function()
             }
         });
     var playzone = dojo.create("div", {id: "playzone"}, container);
+    dojo.create("div", {id: "personscontainer"}, container);
     makeMap();
     randomizeMap();
     for (var x = 0; x < WIDTH ; x ++)

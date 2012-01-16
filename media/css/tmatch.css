@@ -1,0 +1,119 @@
+/*
+ * The CSS for game elements
+ */
+#container
+    {
+    width: 727px;
+    position: relative;
+    margin: auto;
+    height: 550px;
+    }
+.message
+    {
+    }
+#score
+    {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    text-align: center;
+    }
+#current
+    {
+    position: absolute;
+    bottom: 191px;
+    left: 10px;
+    height: 171px;
+    width: 101px;
+    border: 1px solid black;
+    text-align: center;
+    }
+#stash
+    {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    height: 171px;
+    width: 101px;
+    border: 1px solid black;
+    text-align: center;
+    }
+#playzone
+    {
+    /*
+    width: 100%;
+    */
+    }
+#playzone div
+    {
+    height: 171px;
+    width: 101px;
+    position: absolute;
+    background-position: bottom;
+    background-repeat: no-repeat;
+    }
+.matcher
+    {
+    background-image: url('../img/Star.png');
+    }
+.eraser
+    {
+    background-image: url('../img/Key.png');
+    }
+.biggesttombstone
+    {
+    background-image: url('../img/Orange Diamond.png');
+    }
+.bigtombstone
+    {
+    background-image: url('../img/Blue Diamond.png');
+    }
+.tombstone
+    {
+    background-image: url('../img/Green Diamond.png');
+    }
+.bug
+    {
+    background-image: url('../img/Door Tall Closed.png');
+    background-position: 0px -20px !important;
+    }
+.jumping_bug
+    {
+    background-image: url('../img/Water Bug2.png');
+    }
+.empty
+    {
+    background-image: url('../img/Water Block.png');
+    }
+.type_1
+    {
+    background-image: url('../img/Brown Block.png');
+    }
+.type_2
+    {
+    background-image: url('../img/Dirt Block.png');
+    }
+.type_3
+    {
+    background-image: url('../img/Grass Block.png');
+    }
+.type_4
+    {
+    background-image: url('../img/Plain Block.png');
+    }
+.type_5
+    {
+    background-image: url('../img/Stone Block.png');
+    }
+.type_6
+    {
+    background-image: url('../img/Wood Block.png');
+    }
+.type_7
+    {
+    background-image: url('../img/Wall Block.png');
+    }
+.type_8
+    {
+    background-image: url('../img/type_8.png');
+    }

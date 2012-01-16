@@ -4,548 +4,12 @@
 
     <title>Tmatch</title>
     <script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.1/dojo/dojo.js" type="text/javascript"></script>
-    <script type="text/javascript" charset="utf-8">
-        var map = [];
-        var cellsmap = [];
-        var current_stash = 0;
-        var CLASSES = {
-            "-1": "bug",
-            "-2": "jumping_bug",
-            "-3": "eraser",
-            "-4": "matcher",
-            "-5": "tombstone",
-            "-6": "bigtombstone",
-            "-7": "biggesttombstone",
-            };
-        var WIDTH = 6;
-        var HEIGHT = 6;
-        var CELL_WIDTH = 101;
-        var CELL_HEIGHT = 81;
-        var LEFT_SHIFT = 121;
-        var BOTTOM_SHIFT = 10;
-        var current_type = 0;
-        var current = null;
-        var score = 0;
-        var looser = false;
-        function sort_unique(arr)
-            {
-            arr = arr.sort();
-            var ret = [arr[0]];
-            for (var i = 1; i < arr.length; i++)
-                {
-                if (arr[i-1] !== arr[i])
-                    ret.push(arr[i]);
-                }
-            return ret;
-            }
-        function randomType(randommap)
-            {
-            if (typeof randommap === "undefined") randommap = false;
-            var i = Math.random() * 100.0;
-            if (i > 99) return 4;       // ~hut
-            if ((i > 98) && !randommap) return -1;      // ~ninja
-            if (i > 97) return 3;       // ~tree
-            if ((i > 95) && !randommap) return -4;      // ~crystal
-            if ((i > 92) && !randommap) return -3;      // ~bot
-            if (i > 77) return -2;      // ~bear
-            if (i > 52) return 2;       // ~bush
-            return 1;                   // ~grass
-            }
-        function setClass(node, t)
-            {
-            dojo.removeClass(node);
-            if (t === 0)
-                {
-                dojo.addClass(node, "empty");
-                }
-            else if (t > 0)
-                {
-                dojo.addClass(node, "type_" + t);
-                }
-            else
-                {
-                dojo.addClass(node, CLASSES[t]);
-                }
-            }
-        function setType(map, x, y, t)
-            {
-            if (typeof map[x] === "undefined") map[x] = [];
-            if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
-            map[x][y] = t;
-            setClass(cellsmap[x][y], t);
-            }
-        function coordsToI(x, y)
-            {
-            return y*WIDTH + x;
-            }
-        function findEquiv(map, t, x, y, seen, ignore)
-            {
-            if ((typeof ignore === "undefined") && (map[x][y] !== t)) return [];
-            var result = [[x,y]]
-            if (typeof seen === "undefined") seen = [];
-            seen.push(coordsToI(x,y));
-            if ((dojo.indexOf(seen, coordsToI(x-1,y)) === -1) && (x > 0) && (map[x-1][y] === t))
-                result = result.concat(findEquiv(map, t, x-1, y, seen));
-            if ((dojo.indexOf(seen, coordsToI(x+1,y)) === -1) && (x < WIDTH-1) && (map[x+1][y] === t))
-                result = result.concat(findEquiv(map, t, x+1, y, seen));
-            if ((dojo.indexOf(seen, coordsToI(x,y-1)) === -1) && (y > 0) && (map[x][y-1] === t))
-                result = result.concat(findEquiv(map, t, x, y-1, seen));
-            if ((dojo.indexOf(seen, coordsToI(x,y+1)) === -1) && (y < HEIGHT-1) && (map[x][y+1] === t))
-                result = result.concat(findEquiv(map, t, x, y+1, seen));
-            return result;
-            }
-        function checkComb(map, t, x, y)
-            {
-            var comb = findEquiv(map, t, x, y);
-            var newtype = t + 1;
-            if (t < -4) newtype = t - 1;
-            if (comb.length > 2)
-                {
-                for (var i = 0; i < comb.length; i ++)
-                    {
-                    u = comb[i][0]; v = comb[i][1];
-                    score += Math.abs(t);
-                    setType(map, u, v, 0);
-                    }
-                setType(map, x, y, newtype);
-                checkComb(map, newtype, x, y);
-                score += Math.abs((t+1)*t)*comb.length;
-                }
-            }
-        function matchAll(map, x, y)
-            {
-            result = [];
-            var possible_types = [];
-            var t = 0;
-            var equiv = [];
-            if (x>0) possible_types.push(map[x-1][y]);
-            if (x<WIDTH-1) possible_types.push(map[x+1][y]);
-            if (y>0) possible_types.push(map[x][y-1]);
-            if (y<HEIGHT-1) possible_types.push(map[x][y+1]);
-            possible_types = sort_unique(possible_types);
-            for(var i = 0; i < possible_types.length ; i++)
-                {
-                t = possible_types[i];
-                if ((t < 1) && (t > -5)) continue; // we can match regular blocks and tombstones
-                equiv = findEquiv(map, t, x, y, [], true);
-                if (equiv.length > 2)
-                    {
-                    map[x][y] = t;
-                    checkComb(map, t, x, y);
-                    return true;
-                    }
-                }
-            return false;
-            }
-        function makeMap()
-            {
-            for (var x = 0; x < WIDTH; x++)
-                {
-                for (var y = 0; y < HEIGHT; y++)
-                    {
-                    if (typeof map[x] === "undefined") map[x] = [];
-                    map[x][y] = 0;
-                    if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
-                    cellsmap[x][y] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
-                    setClass(cellsmap[x][y], 0);
-                    }
-                }
-            }
-        function randomizeMap()
-            {
-            /*
-            *
-            setType(map, 0, 0, -7);
-            setType(map, 2, 1, -5);
-            setType(map, 0, 1, -6);
-            setType(map, 1, 1, -6);
-            setType(map, 3, 0, 1);
-            setType(map, 3, 1, 1);
-            setType(map, 0, 2, 1);
-            setType(map, 1, 2, 1);
-            setType(map, 2, 2, 1);
-            return;
-            /*
-            */
-            var percent = 0.7;
-            for (var x = 0; x < WIDTH; x ++)
-                {
-                for (var y = 0; y < HEIGHT; y ++)
-                    {
-                    if (Math.random() > percent)
-                        {
-                        setType(map, x, y, randomType(true));
-                        }
-                    }
-                }
-            }
-        function getNeighboor(map, x, y)
-            {
-            var neighboor = [];
-            if (x>0) neighboor.push([x-1,y,map[x-1][y]]);
-            if (x<WIDTH-1) neighboor.push([x+1,y,map[x+1][y]]);
-            if (y>0) neighboor.push([x,y-1,map[x][y-1]]);
-            if (y<HEIGHT-1) neighboor.push([x,y+1,map[x][y+1]]);
-            return neighboor;
-            }
-        function bugMove(map, x, y)
-            {
-            var nei = getNeighboor(map, x, y);
-            nei.sort(function() { return (Math.round(Math.random())-0.5); });
-            for (var i = 0; i < nei.length; i++)
-                {
-                n = nei[i];
-                if (n[2] === 0)
-                    {
-                    setType(map, n[0], n[1], map[x][y]);
-                    setType(map, x, y, 0);
-                    break;
-                    }
-                }
-            }
-        function checkLooseCondition()
-            {
-            for (var x = 0; x < WIDTH; x ++)
-                {
-                for (var y = 0; y < HEIGHT ; y ++)
-                    {
-                    if (map[x][y] === 0)
-                        {
-                        return false;
-                        }
-                    }
-                }
-            return true;
-            }
-        function checkBugKill(map, x, y)
-            {
-            other_bugs = findEquiv(map, -2, x, y);
-            for (var i = 0; i < other_bugs.length; i ++)
-                {
-                ob = other_bugs[i];
-                nei = getNeighboor(map, ob[0], ob[1]);
-                for (var j = 0; j < nei.length; j ++)
-                    {
-                    n = nei[j];
-                    if (map[n[0]][n[1]] == 0)
-                        {
-                        return 0;
-                        }
-                    }
-                }
-            for (var i = 0; i < other_bugs.length; i ++)
-                {
-                ob = other_bugs[i];
-                setType(map, ob[0], ob[1], -5);
-                }
-            checkComb(map, -5, x, y, map[2][0],map[2][1]);
-            return other_bugs.length;
-            }
-        function doOneStep(changetype)
-            {
-            if (typeof changetype === "undefined") changetype = true;
-            if (changetype)
-                {
-                current_type = randomType();
-                setClass(current, current_type);
-                }
-            var bugs = [];
-            for (var x = 0; x < WIDTH; x ++)
-                {
-                for (var y = 0; y < HEIGHT ; y ++)
-                    {
-                    if (map[x][y] === -2)
-                        {
-                        bugs.push([x,y]);
-                        }
-                    }
-                }
-            for (var i = 0; i < bugs.length; i++)
-                {
-                b = bugs[i];
-                // We check again the type in case this bug was destroyed by another one
-                if (map[b[0]][b[1]] === -2)
-                    {
-                    killcount = checkBugKill(map, b[0], b[1]);
-                    if (killcount > 0)
-                        {
-                        score += killcount * 100;
-                        }
-                    else
-                        {
-                        bugMove(map, b[0], b[1]);
-                        }
-                    }
-                }
-            if (checkLooseCondition())
-                {
-                looser = true;
-                var msg = dojo.create("div", {innerHTML: "Looser"}, "container");
-                dojo.addClass(msg, "message");
-                }
-            dojo.attr("score", "innerHTML", score);
-            }
-        dojo.addOnLoad(function()
-            {
-            //var map = [];
-            current_type = randomType();
-            var container = dojo.create("div", {id: "container"}, dojo.body());
-            current = dojo.create("div", {id: "current", innerHTML:"Current"}, container);
-            dojo.create("div", {id: "score", innerHTML: score}, container);
-            setClass(current, current_type);
-            var stash = dojo.create("div", {id: "stash", innerHTML:"Stash"}, container);
-            dojo.connect(stash, "onclick", function(evt)
-                {
-                if (looser) return;
-                var old_stash = current_stash;
-                current_stash = current_type;
-                setClass(stash, current_stash);
-                if (old_stash !== 0)
-                    {
-                    current_type = old_stash;
-                    setClass(current, current_type);
-                    }
-                else
-                    {
-                    current_type = randomType();
-                    setClass(current, current_type);
-                    }
-                });
-            var playzone = dojo.create("div", {id: "playzone"}, container);
-            makeMap();
-            randomizeMap();
-            for (var x = 0; x < WIDTH ; x ++)
-                {
-                for (var y = 0; y < HEIGHT; y ++)
-                    {
-                    dojo.connect(cellsmap[x][y], "onclick", function(evt)
-                        {
-                        if (looser) return;
-                        x = parseInt(dojo.attr(this, "tmatchx"));
-                        y = parseInt(dojo.attr(this, "tmatchy"));
-                        celltype = map[x][y];
-                        if ((evt.offsetY < 50) && (y > 0))
-                            {
-                            y-=1;
-                            celltype = map[x][y];
-                            }
-                        if ((current_type === -3) && (celltype !== 0)) // eraser
-                            {
-                            if (celltype > 0)
-                                {
-                                score -= celltype;
-                                }
-                            score += -10 * celltype;
-                            setType(map, x, y, 0);
-                            doOneStep();
-                            }
-                        else if (celltype === 0)
-                            {
-                            if (current_type > 0)
-                                {
-                                setType(map, x, y, current_type);
-                                score += current_type;
-                                checkComb(map, current_type, x, y);
-                                doOneStep();
-                                }
-                            else if (current_type === -4) // matcher
-                                {
-                                if (matchAll(map, x, y))
-                                    {
-                                    doOneStep();
-                                    }
-                                }
-                            else if ((current_type === -1) || (current_type === -2))
-                                {
-                                setType(map, x, y, current_type);
-                                doOneStep();
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-        function showdoc(iddoc)
-            {
-            dojo.query(".doc").style("display", "none");
-            dojo.query("#doc" + iddoc).style("display", "block");
-            }
-    </script>
-    <style type="text/css" media="screen">
-        body
-            {
-            margin: 0px;
-            padding: 0px;
-            font-family: Verdana;
-            }
-        #container
-            {
-            width: 727px;
-            position: relative;
-            margin: auto;
-            height: 550px;
-            }
-        .message
-            {
-            }
-        #score
-            {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            text-align: center;
-            }
-        #current
-            {
-            position: absolute;
-            bottom: 191px;
-            left: 10px;
-            height: 171px;
-            width: 101px;
-            border: 1px solid black;
-            text-align: center;
-            }
-        #stash
-            {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            height: 171px;
-            width: 101px;
-            border: 1px solid black;
-            text-align: center;
-            }
-        #playzone
-            {
-            /*
-            width: 100%;
-            */
-            }
-        #playzone div
-            {
-            height: 171px;
-            width: 101px;
-            position: absolute;
-            background-position: bottom;
-            background-repeat: no-repeat;
-            }
-        .matcher
-            {
-            background-image: url('media/Star.png');
-            }
-        .eraser
-            {
-            background-image: url('media/Key.png');
-            }
-        .biggesttombstone
-            {
-            background-image: url('media/Orange Diamond.png');
-            }
-        .bigtombstone
-            {
-            background-image: url('media/Blue Diamond.png');
-            }
-        .tombstone
-            {
-            background-image: url('media/Green Diamond.png');
-            }
-        .bug
-            {
-            background-image: url('media/Door Tall Closed.png');
-            background-position: 0px -20px !important;
-            }
-        .jumping_bug
-            {
-            background-image: url('media/Water Bug2.png');
-            }
-        .empty
-            {
-            background-image: url('media/Water Block.png');
-            }
-        .type_1
-            {
-            background-image: url('media/Brown Block.png');
-            }
-        .type_2
-            {
-            background-image: url('media/Dirt Block.png');
-            }
-        .type_3
-            {
-            background-image: url('media/Grass Block.png');
-            }
-        .type_4
-            {
-            background-image: url('media/Plain Block.png');
-            }
-        .type_5
-            {
-            background-image: url('media/Stone Block.png');
-            }
-        .type_6
-            {
-            background-image: url('media/Wood Block.png');
-            }
-        .type_7
-            {
-            background-image: url('media/Wall Block.png');
-            }
-        .type_8
-            {
-            background-image: url('media/type_8.png');
-            }
-        #googlead
-            {
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            }
-        #documentation
-            {
-            position: absolute;
-            left: 10px;
-            top: 560px;
-            width: 100%;
-            }
-        #documentation .doc
-            {
-            position: relative;
-            margin: auto;
-            width: 727; /*10+101+10+101*6*/
-            border: 3px inset black;
-            padding-top: 25px;
-            padding-left: 5px;
-            padding-right: 5px;
-            text-align: justify;
-            }
-        #documentat .doc img
-            {
-            margin: auto;
-            }
-        .prevdoc
-            {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            }
-        .frdoc
-            {
-            position: absolute;
-            top: 5px;
-            left: 360px;
-            }
-        .nextdoc
-            {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            }
-        .centercontainer, h1
-            {
-            text-align: center;
-            width: 100%;
-            }
-    </style>
+    <script src="media/js/doc.js" type="text/javascript" charset="utf-8"></script>
+    <script src="media/js/utils.js" type="text/javascript" charset="utf-8"></script>
+    <script src="media/js/tmatch.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" href="media/css/ui.css" />
+    <link rel="stylesheet" href="media/css/tmatch.css" />
+    <link rel="stylesheet" href="media/css/doc.css" />
     <script type="text/javascript"><!--
         google_ad_client = "ca-pub-7265349873444859";
         /* TMatch */
@@ -555,17 +19,14 @@
         //-->
     </script>
     <script type="text/javascript">
-
-      var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-28322129-1']);
-      _gaq.push(['_trackPageview']);
-
-      (function() {
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-28322129-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
         var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-      })();
-
+    })();
     </script>
 </head>
 <body>
@@ -575,18 +36,54 @@
         </script>
     </div>
     <div id="documentation">
-        <div id="doc0" style="display:block;" class="doc">
-            <h1>Triple Match - version "Alpha Aarrgh"</h1>
-            <p>Welcome ! Bienvenue !</p>
-            <div class="prevdoc"><a href="#" onclick="showdoc(11);">Lire la documentation en français</a></div>
-            <div class="nextdoc"><a href="#" onclick="showdoc(1);">Read the english documentation</a></div>
+        <!-- Main menu -->
+        <div id="doc0en" style="display:none;" class="doc">
+            <h1>Triple Match - version "<a href="#" onclick="showdoc('newen');">Beta Burp</a>"</h1>
+            <p>Welcome !</p>
+            <p><a href="#" onclick="showdoc('newen');">What's new ?</a></p>
+            <div class="frdoc"><a href="#" onclick="showdoc('doc0fr');">Français</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(1);">Read the documentation</a></div>
         </div>
+        <div id="doc0fr" style="display:none;" class="doc">
+            <h1>Triple Match - version "<a href="#" onclick="showdoc('newfr');">Beta Burp</a>"</h1>
+            <p>Bienvenue !</p>
+            <p><a href="#" onclick="showdoc('newfr');">Quoi de neuf ?</a></p>
+            <div class="frdoc"><a href="#" onclick="showdoc('doc0en');">English</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(11);">Lire la documentation</a></div>
+        </div>
+
+        <!-- News -->
+        <div id="newen" style="display:none;" class="doc">
+            <h1>What's new ?</h1>
+            <h2>From version "Alpha Aargh" to version "Beta Burp"</h2>
+            <ul>
+            <li>More doc</li>
+            <li>Code reorganisation</li>
+            <li>Better localization</li>
+            </ul>
+            <div class="prevdoc"><a href="#" onclick="showdoc('doc0en');">Main menu</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc('newfr');">Français</a></div>
+        </div>
+        <div id="newfr" style="display:none;" class="doc">
+            <h1>Quoi de neuf ?</h1>
+            <h2>Entre la version "Alpha Aargh" et la version "Beta Burp"</h2>
+            <ul>
+            <li>Documentation étoffée</li>
+            <li>Réorganisation du code</li>
+            <li>Meilleure gestion des langues</li>
+            </ul>
+            <div class="prevdoc"><a href="#" onclick="showdoc('doc0fr');">Menu principal</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc('newen');">English</a></div>
+        </div>
+
+        <!-- English doc -->
         <div id="doc1" style="display:none;" class="doc">
             <h1>Triple Match</h1>
-            <p>The goal of the game is to keep the board from filling. It's inspired by <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> from <a target="_blank" href="http://www.spryfox.com/">Spryfox</a>, so you won't be lost if you played this one before.</p>
+            <p>This game is inspired by <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> from <a target="_blank" href="http://www.spryfox.com/">Spryfox</a>, so you won't be lost if you played this one before.</p>
+            <p>The goal of the game is to keep the board from filling. Empty cells are presented as water. When there is no water left, the game ends. On each turn, you have to place an item in an empty cell. When you place 3 identical items next to each other, they combine into 1 new item. Thanks to this mechanism, you can prevent the board game from filling.</p>
             <p>Each turn you will be presented a new item to place in the "Current" box on the left. Click on the cell where you want to place this item.</p>
             <p>The "Stash" under the "Current" box allows you to store an item for later use. Click on the stash to move the current item into the stash (and recover the stashed item).</p>
-            <div class="prevdoc"><a href="#" onclick="showdoc(0);">Main menu</a></div>
+            <div class="prevdoc"><a href="#" onclick="showdoc('doc0en');">Main menu</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(11);">Français</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc(2);">Next &rarr;</a></div>
         </div>
@@ -594,7 +91,7 @@
             <h1>Combination</h1>
             <p>You can combine 3 or more blocks into a "bigger" one. The order is :</p>
             <div class="centercontainer">
-                <img src="media/BlocksExplanation.png" />
+                <img src="media/img/BlocksExplanation.png" />
             </div>
             <div class="prevdoc"><a href="#" onclick="showdoc(1);">&larr; Prev</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(12);">Français</a></div>
@@ -604,7 +101,7 @@
             <h1>Annoying Bugs</h1>
             <p>Sometimes, you have to place "Bugs". Bugs move freely on the board an prevent you from placing items. To kill bugs, just confine them in an area without any free cell. They will then change into green diamond. The diamonds follow the same scheme as blocks :</p>
             <div class="centercontainer">
-                <img src="media/BugsExplanation.png" />
+                <img src="media/img/BugsExplanation.png" />
             </div>
             <div class="prevdoc"><a href="#" onclick="showdoc(2);">&larr; Prev</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(13);">Français</a></div>
@@ -628,22 +125,26 @@
             </ul>
             <div class="prevdoc"><a href="#" onclick="showdoc(4);">&larr; Prev</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(19);">Français</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc('doc0en');">Main menu</a></div>
         </div>
+
         <!-- French -->
         <div id="doc11" class="doc" style="display:none;">
             <h1>Triple Match</h1>
-            <p>Le but du jeu est d'empêcher le jeu de se remplir. Le jeu est inspiré de <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> du studio <a target="_blank" href="http://www.spryfox.com/">Spryfox</a>, vous ne serez donc pas perdu si vous y avez déjà joué.</p>
-            <p>A chaque tour, le jeu vous présente un nouvel élément dans la zone "Current" à gauche. Cliquez dans l'espace de jeu sur la cellule où vous voulez placer cet élément.</p>
-            <p>La zone "Stash" sous la zone "Current" vous permet de conserver un élément que vous ne voulez pas utiliser immédiatement. Cliquez sur le "Stash" pour y stocker l'élément courant (et récupérer l'élément stocké).</p>
-            <div class="prevdoc"><a href="#" onclick="showdoc(0);">Menu principal</a></div>
+            <p>Le jeu est inspiré de <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> du studio <a target="_blank" href="http://www.spryfox.com/">Spryfox</a>, vous ne serez donc pas perdu si vous y avez déjà joué.</p>
+            <p>Le but est d'empêcher le jeu de se remplir. Les cellules "d'eau" sont considérées comme "vides". Lorsqu'il n'y a plus de cellule vide, le jeu se termine. A chaque tour, vous devez placer un élément sur une cellule vide. Lorsque vous posez 3 éléments indentiques côte à côte, ils se combinent en 1 nouvel élément. C'est grâce à ce mécanisme que vous pouvez empêcher la zone de jeu de se remplir.</p>
+            <p>A chaque tour, le jeu vous présente un nouvel élément dans la zone "En cours" à gauche. Cliquez dans l'espace de jeu sur la cellule où vous voulez placer cet élément.</p>
+            <p>La zone "Réserve" sous la zone "En cours" vous permet de conserver un élément que vous ne voulez pas utiliser immédiatement. Cliquez sur le "Réserve" pour y stocker l'élément courant (et récupérer l'élément stocké).</p>
+            <div class="prevdoc"><a href="#" onclick="showdoc('doc0fr');">Menu principal</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(1);">English</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc(12);">Suivant &rarr;</a></div>
         </div>
         <div id="doc12" style="display:none;" class="doc">
             <h1>Combinaisons</h1>
+            <p>Lorsque vous placez un troisième bloc à côté de
             <p>Vous pouvez combiner 3 blocs ou plus en un bloc plus "important". Voici l'ordre de combinaison :</p>
             <div class="centercontainer">
-                <img src="media/BlocksExplanation.png" />
+                <img src="media/img/BlocksExplanation.png" />
             </div>
             <div class="prevdoc"><a href="#" onclick="showdoc(11);">&larr; Précédent</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(2);">English</a></div>
@@ -653,7 +154,7 @@
             <h1>Insectes</h1>
             <p>Parfois, vous devez placer des "Insectes". Ils se déplacent librement sur le plateau et vous empêchent de positionner d'autres éléments. Pour les tuer, il suffit de les enfermer dans une zone ne contenant plus aucune cellule libre. Ils se changent alors en diamant vert. Les diamants peuvent se combiner comme les blocs :</p>
             <div class="centercontainer">
-                <img src="media/BugsExplanation.png" />
+                <img src="media/img/BugsExplanation.png" />
             </div>
             <div class="prevdoc"><a href="#" onclick="showdoc(12);">&larr; Précédent</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(3);">English</a></div>
@@ -677,6 +178,7 @@
             </ul>
             <div class="prevdoc"><a href="#" onclick="showdoc(14);">&larr; Précédent</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(9);">English</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc('doc0fr');">Menu principal</a></div>
         </div>
     </div>
 </body>

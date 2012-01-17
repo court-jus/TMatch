@@ -57,6 +57,7 @@
             <h1>What's new ?</h1>
             <h2>From version "Alpha Aargh" to version "Beta Burp"</h2>
             <ul>
+            <li>New feature : <a href="#" onclick="showdoc(5);">characters</a></li>
             <li>More doc</li>
             <li>Code reorganisation</li>
             <li>Better localization</li>
@@ -68,6 +69,7 @@
             <h1>Quoi de neuf ?</h1>
             <h2>Entre la version "Alpha Aargh" et la version "Beta Burp"</h2>
             <ul>
+            <li>Nouvelle fonctionnalité : <a href="#" onclick="showdoc(15)";>les personnages</a></li>
             <li>Documentation étoffée</li>
             <li>Réorganisation du code</li>
             <li>Meilleure gestion des langues</li>
@@ -80,9 +82,17 @@
         <div id="doc1" style="display:none;" class="doc">
             <h1>Triple Match</h1>
             <p>This game is inspired by <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> from <a target="_blank" href="http://www.spryfox.com/">Spryfox</a>, so you won't be lost if you played this one before.</p>
-            <p>The goal of the game is to keep the board from filling. Empty cells are presented as water. When there is no water left, the game ends. On each turn, you have to place an item in an empty cell. When you place 3 identical items next to each other, they combine into 1 new item. Thanks to this mechanism, you can prevent the board game from filling.</p>
+            <p>There is no way to win, just try to make the higher possible score.</p>
+            <p>There is two losing conditions :
+            <ul>
+            <li>Drown the last character</li>
+            <li>Fill the game with "non-water" cells. You lose when there is no water left</li>
+            </ul>
+            </p>
+            <p>On each turn, you have to place an item in an empty cell. When you place 3 identical items next to each other, they combine into 1 new item. Thanks to this mechanism, you can prevent the board game from filling.</p>
             <p>Each turn you will be presented a new item to place in the "Current" box on the left. Click on the cell where you want to place this item.</p>
             <p>The "Stash" under the "Current" box allows you to store an item for later use. Click on the stash to move the current item into the stash (and recover the stashed item).</p>
+            <p>There is one stash for every character in the game. Just click on a character to see his own "personnal" stash</p>
             <div class="prevdoc"><a href="#" onclick="showdoc('doc0en');">Main menu</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(11);">Français</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc(2);">Next &rarr;</a></div>
@@ -114,6 +124,16 @@
             <p class="bug" style="vertical-align: middle; padding-left: 100px;background-position: 0 -55; height: 120; background-repeat: no-repeat;">This one is just here to block you. All you can do is remove it with the key.</p>
             <div class="prevdoc"><a href="#" onclick="showdoc(3);">&larr; Prev</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(14);">Français</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(5);">Next &rarr;</a></div>
+        </div>
+        <div id="doc5" style="display: none;" class="doc">
+            <h1>Little characters</h1>
+            <p>At the beginning, there is only the queen. A new little guy will appear each time you make a match of level 5 or more (wood plank)</p>
+            <p>They move on every "non water" cell. They can move on diagonals.</p>
+            <p>For every character in the game, there is a stash. The more character you have, the more items you can store for later use.</p>
+            <p>Characters drown if they find themselves on a water cell without any possibility do go back "on earth". So be careful when you make a match with a character on it or when you destroy an item with the key.</p>
+            <div class="prevdoc"><a href="#" onclick="showdoc(4);">&larr; Prev</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc(15);">Français</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc(9);">Next &rarr;</a></div>
         </div>
         <div id="doc9" style="display: none;" class="doc credits">
@@ -123,7 +143,7 @@
                 <li>Inspiration : <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> from <a target="_blank" href="http://www.spryfox.com/">Spryfox</a> (I guess it was inspired by older stuff, so I thank them too)</li>
                 <li>Graphics : <a target="_blank" href="http://www.lostgarden.com/2007/05/dancs-miraculously-flexible-game.html">PlanetCute</a> from <a target="_blank" href="http://www.lostgarden.com/">Lost Garden</a></li>
             </ul>
-            <div class="prevdoc"><a href="#" onclick="showdoc(4);">&larr; Prev</a></div>
+            <div class="prevdoc"><a href="#" onclick="showdoc(5);">&larr; Prev</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(19);">Français</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc('doc0en');">Main menu</a></div>
         </div>
@@ -132,9 +152,17 @@
         <div id="doc11" class="doc" style="display:none;">
             <h1>Triple Match</h1>
             <p>Le jeu est inspiré de <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> du studio <a target="_blank" href="http://www.spryfox.com/">Spryfox</a>, vous ne serez donc pas perdu si vous y avez déjà joué.</p>
-            <p>Le but est d'empêcher le jeu de se remplir. Les cellules "d'eau" sont considérées comme "vides". Lorsqu'il n'y a plus de cellule vide, le jeu se termine. A chaque tour, vous devez placer un élément sur une cellule vide. Lorsque vous posez 3 éléments indentiques côte à côte, ils se combinent en 1 nouvel élément. C'est grâce à ce mécanisme que vous pouvez empêcher la zone de jeu de se remplir.</p>
+            <p>On ne peut pas gagner, on peut juste essayer de faire le meilleur score possible.</p>
+            <p>Il y a deux façon de perdre :
+            <ul>
+            <li>Noyer tous les personnages</li>
+            <li>Remplir la zone de jeu jusqu'à ce qu'il n'y ait plus d'eau du tout</li>
+            </ul>
+            </p>
+            <p>A chaque tour, vous devez placer un élément sur une cellule vide. Lorsque vous posez 3 éléments indentiques côte à côte, ils se combinent en 1 nouvel élément. C'est grâce à ce mécanisme que vous pouvez empêcher la zone de jeu de se remplir.</p>
             <p>A chaque tour, le jeu vous présente un nouvel élément dans la zone "En cours" à gauche. Cliquez dans l'espace de jeu sur la cellule où vous voulez placer cet élément.</p>
             <p>La zone "Réserve" sous la zone "En cours" vous permet de conserver un élément que vous ne voulez pas utiliser immédiatement. Cliquez sur le "Réserve" pour y stocker l'élément courant (et récupérer l'élément stocké).</p>
+            <p>Vous disposez d'autant de réserves différentes qu'il y a de personnages sur le jeu. Cliquez simplement sur un personnage pour afficher sa réserve "personnelle".</p>
             <div class="prevdoc"><a href="#" onclick="showdoc('doc0fr');">Menu principal</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(1);">English</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc(12);">Suivant &rarr;</a></div>
@@ -167,6 +195,16 @@
             <p class="bug" style="vertical-align: middle; padding-left: 100px;background-position: 0 -55; height: 120; background-repeat: no-repeat;">Ce bloc est juste là pour vous bloquer. Tout ce que vous pouvez faire, c'est l'enlever grâce à la clé.</p>
             <div class="prevdoc"><a href="#" onclick="showdoc(13);">&larr; Précédent</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(4);">English</a></div>
+            <div class="nextdoc"><a href="#" onclick="showdoc(15);">Suivant &rarr;</a></div>
+        </div>
+        <div id="doc15" style="display: none;" class="doc">
+            <h1>Personnsages</h1>
+            <p>Au départ il n'y a que la reine. Un nouveau personnage apparaît à chaque fois que vous réalisez une combinaison de niveau 5 ou plus (planche de bois)</p>
+            <p>Les personnages se déplacent sur les cellules "hors d'eau". Contrairement aux insectes, ils peuvent se déplacer en diagonale.</p>
+            <p>Pour chaque personnage sur la zone de jeu, il y a une réserve. Donc plus vous avez de personnages, plus vous pouvez stocker d'éléments pour un usage futur.</p>
+            <p>Les personnages se noient si ils se retrouvent sur une cellule d'eau avec aucune possibilité de fuite (attention lorsque vous combinez 3 éléments et qu'un personnage est sur l'un de ces éléments ou lorsque vous supprimez un élément avec la clé)</p>
+            <div class="prevdoc"><a href="#" onclick="showdoc(14);">&larr; Précédent</a></div>
+            <div class="frdoc"><a href="#" onclick="showdoc(5);">English</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc(19);">Suivant &rarr;</a></div>
         </div>
         <div id="doc19" style="display: none;" class="doc credits">
@@ -176,7 +214,7 @@
                 <li>Inspiration : <a target="_blank" href="http://www.tripletown.com/">Triple Town</a> de <a target="_blank" href="http://www.spryfox.com/">Spryfox</a> (Je suppose qu'ils ont eux-mêmes été inspirés par d'autres que je remercie aussi)</li>
                 <li>Graphismes : <a target="_blank" href="http://www.lostgarden.com/2007/05/dancs-miraculously-flexible-game.html">PlanetCute</a> de <a target="_blank" href="http://www.lostgarden.com/">Lost Garden</a></li>
             </ul>
-            <div class="prevdoc"><a href="#" onclick="showdoc(14);">&larr; Précédent</a></div>
+            <div class="prevdoc"><a href="#" onclick="showdoc(15);">&larr; Précédent</a></div>
             <div class="frdoc"><a href="#" onclick="showdoc(9);">English</a></div>
             <div class="nextdoc"><a href="#" onclick="showdoc('doc0fr');">Menu principal</a></div>
         </div>

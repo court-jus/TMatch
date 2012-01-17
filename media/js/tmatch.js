@@ -2,9 +2,12 @@
     var map = [];
     var cellsmap = [];
     var personsmap = [];
+    var stashes = [];
     var current_stash = 0;
+    var persons_sequence = 0;
     var PCLASSES = {
         "1" : "person1",
+        "9" : "queen",
         };
     var CLASSES = {
         "-1": "bug",
@@ -31,7 +34,7 @@ function setClass(node, t)
     {
     dojo.removeClass(node);
     dojo.addClass(node, "mapcell");
-    if (t === 0)
+    if ((typeof t === "undefined") || (t === 0))
         {
         dojo.addClass(node, "empty");
         }
@@ -58,6 +61,15 @@ function coordsToI(x, y)
 function personCoordToDomCoord(x, y)
     {
     return [(CELL_WIDTH*x+LEFT_SHIFT+30), (CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT+50)];
+    }
+function personPresent(x, y)
+    {
+    for (var i = 0; i < personsmap.length ; i++)
+        {
+        p = personsmap[i];
+        if ((p['x'] == x) && (p['y'] == y)) return true;
+        }
+    return false;
     }
 function findEquiv(map, t, x, y, seen, ignore)
     {
@@ -110,14 +122,55 @@ function getNeighboor(map, x, y, diagonals)
 function addPerson(x, y, t)
     {
     domcoords = personCoordToDomCoord(x,y);
+    my_id = persons_sequence;
+    persons_sequence += 1;
     p = {
         type: t,
-        domnode: dojo.create("div", {"style":"bottom:"+domcoords[1]+";left:"+domcoords[0]+";",innerHTML:"&nbsp;"}, dojo.byId("personscontainer")),
+        domnode: dojo.create("div", {"style":"bottom:"+domcoords[1]+";left:"+domcoords[0]+";",innerHTML:"&nbsp;","pidx":persons_sequence}, dojo.byId("personscontainer")),
         x:x,
-        y:y
+        y:y,
+        idx:persons_sequence
         };
     dojo.addClass(p["domnode"], PCLASSES[t]);
+    dojo.connect(p["domnode"], "onclick", function(evt)
+        {
+        idx = parseInt(dojo.attr(this, "pidx"));
+        if (isNaN(idx)) return;
+        current_stash = idx;
+        setClass(stash, stashes[current_stash]);
+        });
     personsmap.push(p);
+    }
+function loosePerson(p)
+    {
+    // Change the current stash to the first "other person"
+    var found = false;
+    var my_index_in_map = null;
+    for (var i = 0; i < personsmap.length ; i ++)
+        {
+        op = personsmap[i];
+        if (op['idx'] === p['idx'])
+            {// that's me
+            my_index_in_map = i;
+            }
+        else
+            {
+            current_stash = op['idx'];
+            setClass(stash, stashes[current_stash]);
+            found = true;
+            }
+        }
+    if (my_index_in_map !== null)
+        {
+        p['domnode'].parentNode.removeChild(p['domnode']);
+        personsmap.splice(my_index_in_map, 1);
+        }
+    if (!found) // I was the last one ?
+        {
+        looser = true;
+        var msg = dojo.create("div", {innerHTML: "Looser"}, "container");
+        dojo.addClass(msg, "message");
+        }
     }
 
 /* Map functions */
@@ -140,31 +193,40 @@ function makeMap()
 function randomizeMap()
     {
     /*
-    */
+    *
     setType(map, 0, 0, -7);
     setType(map, 2, 1, -5);
     setType(map, 0, 1, -6);
     setType(map, 1, 1, -6);
-    setType(map, 3, 3, 1);
-    setType(map, 3, 1, 1);
-    setType(map, 0, 2, 1);
-    setType(map, 1, 2, 1);
-    setType(map, 2, 2, 1);
-    addPerson(3,3,1);
+    setType(map, 3, 3, 5);
+    setType(map, 3, 1, 5);
+    setType(map, 0, 2, 5);
+    setType(map, 1, 2, 5);
+    setType(map, 2, 2, 5);
+    addPerson(3,3,9);
     return;
     /*
     */
     var percent = 0.7;
+    var whereToPutQueen = null;
     for (var x = 0; x < WIDTH; x ++)
         {
         for (var y = 0; y < HEIGHT; y ++)
             {
             if (Math.random() > percent)
                 {
-                setType(map, x, y, randomType(true));
+                rt = randomType(true);
+                if ((rt > 0) && (whereToPutQueen === null)) whereToPutQueen = [x,y];
+                setType(map, x, y, rt);
                 }
             }
         }
+    if (whereToPutQueen === null)
+        {
+        whereToPutQueen = [int(Math.random() * WIDTH), int(Math.random() * HEIGHT)];
+        setType(map, whereToPutQueen[0], whereToPutQueen[1], 1);
+        }
+    addPerson(whereToPutQueen[0], whereToPutQueen[1], 9);
     }
 
 /* Game turn functions */
@@ -184,6 +246,7 @@ function checkComb(map, t, x, y)
         setType(map, x, y, newtype);
         checkComb(map, newtype, x, y);
         score += Math.abs((t+1)*t)*comb.length;
+        if (newtype > 5) addPerson(x, y, 1);
         }
     }
 function matchAll(map, x, y)
@@ -276,19 +339,25 @@ function doPersonStep(p)
     {
     var nei = getNeighboor(map, p['x'],p['y'],true);
     var moveOrNot = (Math.random() > 0.5);
-    console.debug(p, nei, moveOrNot);
-    if ((moveOrNot) || (map[p['x']][p['y']] === 0)) // always move if on water
+    var onWater = (map[p['x']][p['y']] === 0);
+    var couldMove = false;
+    if ((moveOrNot) || (onWater)) // always move if on water
         {
         nei.sort(function() { return (Math.round(Math.random())-0.5); });
         for (var i = 0; i < nei.length; i++)
             {
             n = nei[i];
-            if (n[2] > 0)
+            if ((n[2] > 0) && (!personPresent(n[0], n[1])))
                 {
                 personMoveTo(p, n[0], n[1]);
+                couldMove = true;
                 break;
                 }
             }
+        }
+    if ((!couldMove) && (onWater)) // He couldn't move
+        {
+        loosePerson(p);
         }
     }
 function doOneStep(changetype)
@@ -354,10 +423,10 @@ dojo.addOnLoad(function()
     dojo.connect(stash, "onclick", function(evt)
         {
         if (looser) return;
-        var old_stash = current_stash;
-        current_stash = current_type;
-        setClass(stash, current_stash);
-        if (old_stash !== 0)
+        var old_stash = stashes[current_stash];
+        stashes[current_stash] = current_type;
+        setClass(stash, stashes[current_stash]);
+        if ((typeof old_stash !== "undefined") && (old_stash !== 0))
             {
             current_type = old_stash;
             setClass(current, current_type);

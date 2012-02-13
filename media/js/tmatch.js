@@ -10,13 +10,61 @@
         "9" : "queen",
         };
     var CLASSES = {
-        "-1": "bug",
-        "-2": "jumping_bug",
+        "-1": "door",
+        "-2": "bug",
         "-3": "eraser",
         "-4": "matcher",
-        "-5": "tombstone",
-        "-6": "bigtombstone",
-        "-7": "biggesttombstone",
+        "-5": "gdiamond",
+        "-6": "bdiamond",
+        "-7": "odiamond",
+        };
+    var TYPE_SCORE = {
+        "played": {
+            4: 200,
+            3: 50,
+            2: 10,
+            1: 5,
+            "-1": 500,    // Door
+            "-2": 10,    // Bug
+            "-3": 100,    // Key
+            "-4": 250,    // Star
+            },
+        "comb_item": {
+            1: 10,
+            2: 20,
+            3: 50,
+            4: 100,
+            5: 150,
+            6: 1000,
+            "-2": 100,
+            "-5": 500,
+            "-6": 2500,
+            },
+        "comb_result": {
+            2: 30,
+            3: 70,
+            4: 150,
+            5: 500,
+            6: 2500,
+            7: 10000,
+            "-5": 750,
+            "-6": 1500,
+            "-7": 5000,
+            },
+        "destroyed": {
+            7: -20000,
+            6: -5000,
+            5: -1000,
+            4: -200,
+            3: -75,
+            2: -30,
+            1: -5,
+            "-1": 2000,
+            "-2": 10,
+            "-5": 500,
+            "-6": 1000,
+            "-7": 25000,
+            },
         };
     var WIDTH = 6;
     var HEIGHT = 6;
@@ -29,6 +77,61 @@
     var score = 0;
     var looser = false;
     var lang_code = obtenirCodeLangueNavig();
+    var step = 0;
+/* Randomizers */
+function randomType(randommap)
+    {
+    // if (!randommap) if (step === 0) return -3;
+    if (typeof randommap === "undefined") randommap = false;
+    var i = Math.random() * 100.0;
+    if (i > 99) return 4; // Type 4
+    if ((i > 98) && !randommap) return -1; // Door
+    if (i > 97) return 3;  // Type 3
+    if ((i > 95) && !randommap) return -4; // Star
+    if ((i > 92) && !randommap) return -3; // Key
+    if (i > 77) return -2; // Bug
+    if (i > 52) return 2; // Type 2
+    return 1; // Type 1
+    }
+function randomizeMap()
+    {
+    /*
+    *
+    setType(map, 0, 0, -7);
+    setType(map, 2, 1, -7);
+    setType(map, 0, 1, -7);
+    setType(map, 1, 1, -7);
+    setType(map, 3, 3, 7);
+    setType(map, 3, 1, 7);
+    setType(map, 0, 2, 7);
+    setType(map, 1, 2, 6);
+    setType(map, 2, 2, 6);
+    addPerson(3,3,9);
+    addPerson(0,2,9);
+    return;
+    /*
+    */
+    var percent = 0.7;
+    var whereToPutQueen = null;
+    for (var x = 0; x < WIDTH; x ++)
+        {
+        for (var y = 0; y < HEIGHT; y ++)
+            {
+            if (Math.random() > percent)
+                {
+                rt = randomType(true);
+                if ((rt > 0) && (whereToPutQueen === null)) whereToPutQueen = [x,y];
+                setType(map, x, y, rt);
+                }
+            }
+        }
+    if (whereToPutQueen === null)
+        {
+        whereToPutQueen = [int(Math.random() * WIDTH), int(Math.random() * HEIGHT)];
+        setType(map, whereToPutQueen[0], whereToPutQueen[1], 1);
+        }
+    addPerson(whereToPutQueen[0], whereToPutQueen[1], 9);
+    }
 /* Helpers */
 function setClass(node, t)
     {
@@ -87,19 +190,6 @@ function findEquiv(map, t, x, y, seen, ignore)
         result = result.concat(findEquiv(map, t, x, y+1, seen));
     return result;
     }
-function randomType(randommap)
-    {
-    if (typeof randommap === "undefined") randommap = false;
-    var i = Math.random() * 100.0;
-    if (i > 99) return 4;       // ~hut
-    if ((i > 98) && !randommap) return -1;      // ~ninja
-    if (i > 97) return 3;       // ~tree
-    if ((i > 95) && !randommap) return -4;      // ~crystal
-    if ((i > 92) && !randommap) return -3;      // ~bot
-    if (i > 77) return -2;      // ~bear
-    if (i > 52) return 2;       // ~bush
-    return 1;                   // ~grass
-    }
 function getNeighboor(map, x, y, diagonals)
     {
     if (typeof diagonals === "undefined") diagonals = false;
@@ -124,14 +214,18 @@ function addPerson(x, y, t)
     domcoords = personCoordToDomCoord(x,y);
     my_id = persons_sequence;
     persons_sequence += 1;
+    domnode= dojo.create("div", {"style":"bottom:"+domcoords[1]+";left:"+domcoords[0]+";",innerHTML:"&nbsp;","pidx":persons_sequence}, dojo.byId("personscontainer"));
+    tooltipnode= dojo.create("div", {}, domnode);
     p = {
         type: t,
-        domnode: dojo.create("div", {"style":"bottom:"+domcoords[1]+";left:"+domcoords[0]+";",innerHTML:"&nbsp;","pidx":persons_sequence}, dojo.byId("personscontainer")),
+        domnode: domnode,
+        tooltipnode: tooltipnode,
         x:x,
         y:y,
         idx:persons_sequence
         };
     dojo.addClass(p["domnode"], PCLASSES[t]);
+    dojo.addClass(p["tooltipnode"], "persontt");
     dojo.connect(p["domnode"], "onclick", function(evt)
         {
         idx = parseInt(dojo.attr(this, "pidx"));
@@ -140,6 +234,14 @@ function addPerson(x, y, t)
         setClass(stash, stashes[current_stash]);
         });
     personsmap.push(p);
+    }
+function findPerson(idx)
+    {
+    for (var i = 0; i < personsmap.length ; i ++)
+        {
+        p = personsmap[i];
+        if (p['idx'] == idx) return p;
+        }
     }
 function loosePerson(p)
     {
@@ -190,44 +292,6 @@ function makeMap()
             }
         }
     }
-function randomizeMap()
-    {
-    /*
-    *
-    setType(map, 0, 0, -7);
-    setType(map, 2, 1, -5);
-    setType(map, 0, 1, -6);
-    setType(map, 1, 1, -6);
-    setType(map, 3, 3, 5);
-    setType(map, 3, 1, 5);
-    setType(map, 0, 2, 5);
-    setType(map, 1, 2, 5);
-    setType(map, 2, 2, 5);
-    addPerson(3,3,9);
-    return;
-    /*
-    */
-    var percent = 0.7;
-    var whereToPutQueen = null;
-    for (var x = 0; x < WIDTH; x ++)
-        {
-        for (var y = 0; y < HEIGHT; y ++)
-            {
-            if (Math.random() > percent)
-                {
-                rt = randomType(true);
-                if ((rt > 0) && (whereToPutQueen === null)) whereToPutQueen = [x,y];
-                setType(map, x, y, rt);
-                }
-            }
-        }
-    if (whereToPutQueen === null)
-        {
-        whereToPutQueen = [int(Math.random() * WIDTH), int(Math.random() * HEIGHT)];
-        setType(map, whereToPutQueen[0], whereToPutQueen[1], 1);
-        }
-    addPerson(whereToPutQueen[0], whereToPutQueen[1], 9);
-    }
 
 /* Game turn functions */
 function checkComb(map, t, x, y)
@@ -235,17 +299,27 @@ function checkComb(map, t, x, y)
     var comb = findEquiv(map, t, x, y);
     var newtype = t + 1;
     if (t < -4) newtype = t - 1;
+    if ((newtype <= -8) || (newtype >= 8))
+        {
+        return;
+        }
     if (comb.length > 2)
         {
         for (var i = 0; i < comb.length; i ++)
             {
             u = comb[i][0]; v = comb[i][1];
-            score += Math.abs(t);
+            if (typeof TYPE_SCORE['comb_item'][t] !== undefined)
+                {
+                score += TYPE_SCORE['comb_item'][t];
+                }
             setType(map, u, v, 0);
             }
         setType(map, x, y, newtype);
         checkComb(map, newtype, x, y);
-        score += Math.abs((t+1)*t)*comb.length;
+        if (typeof TYPE_SCORE['comb_result'][t+1] !== undefined)
+            {
+            score += TYPE_SCORE['comb_result'][t+1];
+            }
         if (newtype > 5) addPerson(x, y, 1);
         }
     }
@@ -263,7 +337,7 @@ function matchAll(map, x, y)
     for(var i = 0; i < possible_types.length ; i++)
         {
         t = possible_types[i];
-        if ((t < 1) && (t > -5)) continue; // we can match regular blocks and tombstones
+        if (((t < 1) && (t > -5)) || (t < -6) || (t > 6)) continue; // we can match regular blocks and tombstones
         equiv = findEquiv(map, t, x, y, [], true);
         if (equiv.length > 2)
             {
@@ -330,6 +404,10 @@ function checkBugKill(map, x, y)
     for (var i = 0; i < other_bugs.length; i ++)
         {
         ob = other_bugs[i];
+        if (typeof TYPE_SCORE['comb_result'][-5] !== undefined)
+            {
+            score += killcount * TYPE_SCORE['comb_result'][-5];
+            }
         setType(map, ob[0], ob[1], -5);
         }
     checkComb(map, -5, x, y, map[2][0],map[2][1]);
@@ -388,7 +466,10 @@ function doOneStep(changetype)
             killcount = checkBugKill(map, b[0], b[1]);
             if (killcount > 0)
                 {
-                score += killcount * 100;
+                if (typeof TYPE_SCORE['comb_item'][-2] !== undefined)
+                    {
+                    score += killcount * TYPE_SCORE['comb_item'][-2];
+                    }
                 }
             else
                 {
@@ -408,6 +489,7 @@ function doOneStep(changetype)
         dojo.addClass(msg, "message");
         }
     dojo.attr("score", "innerHTML", score);
+    step += 1;
     }
 
 /* Main */
@@ -424,7 +506,10 @@ dojo.addOnLoad(function()
         {
         if (looser) return;
         var old_stash = stashes[current_stash];
-        stashes[current_stash] = current_type;
+        var old_person = findPerson(current_stash);
+        var stashed_item = current_type;
+        if (typeof old_person === "undefined") old_person = findPerson(1);
+        stashes[current_stash] = stashed_item;
         setClass(stash, stashes[current_stash]);
         if ((typeof old_stash !== "undefined") && (old_stash !== 0))
             {
@@ -436,6 +521,7 @@ dojo.addOnLoad(function()
             current_type = randomType();
             setClass(current, current_type);
             }
+        setClass(old_person['tooltipnode'], stashed_item);
         });
     var playzone = dojo.create("div", {id: "playzone"}, container);
     dojo.create("div", {id: "personscontainer"}, container);
@@ -458,20 +544,26 @@ dojo.addOnLoad(function()
                     }
                 if ((current_type === -3) && (celltype !== 0)) // eraser
                     {
-                    if (celltype > 0)
+                    if (typeof TYPE_SCORE['played'][current_type] !== undefined)
                         {
-                        score -= celltype;
+                        score += TYPE_SCORE['played'][current_type];
                         }
-                    score += -10 * celltype;
+                    if (typeof TYPE_SCORE['destroyed'][celltype] !== undefined)
+                        {
+                        score += TYPE_SCORE['destroyed'][celltype];
+                        }
                     setType(map, x, y, 0);
                     doOneStep();
                     }
                 else if (celltype === 0)
                     {
+                    if (typeof TYPE_SCORE['played'][current_type] !== undefined)
+                        {
+                        score += TYPE_SCORE['played'][current_type];
+                        }
                     if (current_type > 0)
                         {
                         setType(map, x, y, current_type);
-                        score += current_type;
                         checkComb(map, current_type, x, y);
                         doOneStep();
                         }

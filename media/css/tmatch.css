@@ -52,6 +52,13 @@
     background-position: bottom;
     background-repeat: no-repeat;
     }
+#personscontainer div.mapcell
+    {
+    height: 40px;
+    background-size: 100% 100%;
+    bottom: 30px;
+    left: 25px;
+    }
 .person1
     {
     background-image: url("../img/person1.png");
@@ -78,30 +85,46 @@
     {
     background-image: url('../img/Star.png');
     }
+#personscontainer div.mapcell.matcher
+    {
+    background-image: url('../img/Star Bubble.png');
+    }
 .eraser
     {
     background-image: url('../img/Key.png');
     }
-.biggesttombstone
+#personscontainer div.mapcell.eraser
+    {
+    background-image: url('../img/Key Bubble.png');
+    }
+.odiamond
     {
     background-image: url('../img/Orange Diamond.png');
     }
-.bigtombstone
+.bdiamond
     {
     background-image: url('../img/Blue Diamond.png');
     }
-.tombstone
+.gdiamond
     {
     background-image: url('../img/Green Diamond.png');
     }
-.bug
+.door
     {
     background-image: url('../img/Door Tall Closed.png');
     background-position: 0px -20px !important;
     }
-.jumping_bug
+#personscontainer div.mapcell.door
+    {
+    background-image: url('../img/Door Tall Bubble.png');
+    }
+.bug
     {
     background-image: url('../img/Water Bug2.png');
+    }
+#personscontainer div.mapcell.bug
+    {
+    background-image: url('../img/Enemy Bug Bubble.png');
     }
 .empty
     {
@@ -136,6 +159,38 @@
     background-image: url('../img/Wall Block.png');
     }
 .type_8
+    {
+    background-image: url('../img/type_8.png');
+    }
+#personscontainer div.mapcell.type_1
+    {
+    background-image: url('../img/Brown Bubble.png');
+    }
+#personscontainer div.mapcell.type_2
+    {
+    background-image: url('../img/Dirt Bubble.png');
+    }
+#personscontainer div.mapcell.type_3
+    {
+    background-image: url('../img/Grass Bubble.png');
+    }
+#personscontainer div.mapcell.type_4
+    {
+    background-image: url('../img/Plain Bubble.png');
+    }
+#personscontainer div.mapcell.type_5
+    {
+    background-image: url('../img/Stone Bubble.png');
+    }
+#personscontainer div.mapcell.type_6
+    {
+    background-image: url('../img/Wood Bubble.png');
+    }
+#personscontainer div.mapcell.type_7
+    {
+    background-image: url('../img/Wall Bubble.png');
+    }
+#personscontainer div.mapcell.type_8
     {
     background-image: url('../img/type_8.png');
     }

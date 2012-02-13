@@ -46,3 +46,30 @@
     text-align: center;
     width: 100%;
     }
+table.gridscore
+    {
+    border-collapse: collapse;
+    border: 1px solid gray;
+    }
+.gridscore tr
+    {
+    height: 50px;
+    }
+.gridscore tbody tr th
+    {
+    background-repeat: no-repeat;
+    background-size: 50px;
+    background-position: 10px -18px;
+    border: 1px solid gray;
+    text-align: right;
+    padding-right: 10px;
+    }
+.gridscore tbody tr th.door
+    {
+    background-position: 10px -18px !important;
+    }
+.gridscore tr td
+    {
+    border: 1px solid gray;
+    text-align: center;
+    }

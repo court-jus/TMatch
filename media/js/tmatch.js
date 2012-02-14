@@ -316,9 +316,9 @@ function checkComb(map, t, x, y)
             }
         setType(map, x, y, newtype);
         checkComb(map, newtype, x, y);
-        if (typeof TYPE_SCORE['comb_result'][t+1] !== undefined)
+        if (typeof TYPE_SCORE['comb_result'][newtype] !== undefined)
             {
-            score += TYPE_SCORE['comb_result'][t+1];
+            score += TYPE_SCORE['comb_result'][newtype];
             }
         if (newtype > 5) addPerson(x, y, 1);
         }
@@ -406,7 +406,7 @@ function checkBugKill(map, x, y)
         ob = other_bugs[i];
         if (typeof TYPE_SCORE['comb_result'][-5] !== undefined)
             {
-            score += killcount * TYPE_SCORE['comb_result'][-5];
+            score += TYPE_SCORE['comb_result'][-5];
             }
         setType(map, ob[0], ob[1], -5);
         }

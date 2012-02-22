@@ -38,6 +38,18 @@
     border: 1px solid black;
     text-align: center;
     }
+#layerswitcher
+    {
+    position: absolute;
+    bottom: 372px;
+    left: 10px;
+    }
+#layerswitcher div
+    {
+    width: 101px;
+    border: 1px solid black;
+    text-align: center;
+    }
 #personscontainer
     {
     /*

@@ -4,6 +4,7 @@
     var personsmap = [];
     var stashes = [];
     var current_stash = 0;
+    var current_layer = 0;
     var persons_sequence = 0;
     var PCLASSES = {
         "1" : "person1",
@@ -69,6 +70,8 @@
     var WIDTH = 6;
     var HEIGHT = 6;
     var LAYERS = 3;
+    var LOWER_LAYER = -1;
+    var UPPER_LAYER = 1;
     var CELL_WIDTH = 101;
     var CELL_HEIGHT = 81;
     var LEFT_SHIFT = 121;
@@ -298,7 +301,8 @@ function makeMap()
                 /* cellsmap */
                 if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
                 if (typeof cellsmap[x][y] === "undefined") cellsmap[x][y] = [];
-                cellsmap[x][y][z] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"tmatchz":z,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
+                var layer = zToVirtLayer(z);
+                cellsmap[x][y][z] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"tmatchz":z,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"+(layer > 0 : "_sky" ? (layer < 0 : "_underground" ? ""))));
                 if (z !== 0) dojo.style(cellsmap[x][y][z], "display", "none");
                 setClass(cellsmap[x][y][z], 0);
                 }
@@ -514,11 +518,50 @@ function doOneStep(changetype)
     dojo.attr("score", "innerHTML", score);
     step += 1;
     }
+function virtLayerToZ(l)
+    {
+    l = l * 2;
+    if (l > 0) l = l - 1;
+    if (l < 0) l = -l;
+    return l;
+    }
+function zToVirtLayer(z)
+    {
+    if (z % 2 === 0) z = -z;
+    if (z > 0) z = z + 1;
+    z = z / 2;
+    return z;
+    }
+function switchToUpper()
+    {
+    current_layer += 1;
+    if (current_layer > UPPER_LAYER) current_layer = LOWER_LAYER;
+    switchToLayer(virtLayerToZ(current_layer));
+    }
+function switchToLower()
+    {
+    current_layer -= 1;
+    if (current_layer < LOWER_LAYER) current_layer = UPPER_LAYER;
+    switchToLayer(virtLayerToZ(current_layer));
+    }
+function switchToLayer(target)
+    {
+    for (var x = 0; x < WIDTH; x ++)
+        {
+        for (var y = 0; y < HEIGHT ; y ++)
+            {
+            for (var z = 0; z < LAYERS ; z ++)
+                {
+                dojo.style(cellsmap[x][y][z], "display", (z===target ? "block" : "none"));
+                }
+            }
+        }
+    }
 
 /* Main */
 dojo.addOnLoad(function()
     {
-    //var map = [];
+    /* Prepare UI */
     current_type = randomType();
     var container = dojo.create("div", {id: "container"}, dojo.body());
     current = dojo.create("div", {id: "current", innerHTML:(lang_code === "fr" ? "En cours" : "Current")}, container);
@@ -547,7 +590,16 @@ dojo.addOnLoad(function()
         setClass(old_person['tooltipnode'], stashed_item);
         });
     var playzone = dojo.create("div", {id: "playzone"}, container);
+    dojo.create("div", {id: "playzone_sky"}, playzone);
+    dojo.create("div", {id: "playzone_underground"}, playzone);
     dojo.create("div", {id: "personscontainer"}, container);
+    var layerswitcher = dojo.create("div", {id: "layerswitcher"}, container);
+    var upswitch = dojo.create("div", {innerHTML: "&uarr;"}, layerswitcher);
+    dojo.connect(upswitch, "onclick", switchToUpper);
+    var dnswitch = dojo.create("div", {innerHTML: "&darr;"}, layerswitcher);
+    dojo.connect(dnswitch, "onclick", switchToLower);
+
+    /* Prepare map */
     makeMap();
     randomizeMap();
     for (var x = 0; x < WIDTH ; x ++)

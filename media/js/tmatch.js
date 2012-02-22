@@ -68,6 +68,7 @@
         };
     var WIDTH = 6;
     var HEIGHT = 6;
+    var LAYERS = 3;
     var CELL_WIDTH = 101;
     var CELL_HEIGHT = 81;
     var LEFT_SHIFT = 121;
@@ -121,16 +122,16 @@ function randomizeMap()
                 {
                 rt = randomType(true);
                 if ((rt > 0) && (whereToPutQueen === null)) whereToPutQueen = [x,y];
-                setType(map, x, y, rt);
+                setType(map, x, y, 0, rt);
                 }
             }
         }
     if (whereToPutQueen === null)
         {
         whereToPutQueen = [int(Math.random() * WIDTH), int(Math.random() * HEIGHT)];
-        setType(map, whereToPutQueen[0], whereToPutQueen[1], 1);
+        setType(map, whereToPutQueen[0], whereToPutQueen[1], 0, 1);
         }
-    addPerson(whereToPutQueen[0], whereToPutQueen[1], 9);
+    addPerson(whereToPutQueen[0], whereToPutQueen[1], 0, 9);
     }
 /* Helpers */
 function setClass(node, t)
@@ -150,12 +151,14 @@ function setClass(node, t)
         dojo.addClass(node, CLASSES[t]);
         }
     }
-function setType(map, x, y, t)
+function setType(map, x, y, z, t)
     {
     if (typeof map[x] === "undefined") map[x] = [];
+    if (typeof map[x][y] === "undefined") map[x][y] = [];
     if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
-    map[x][y] = t;
-    setClass(cellsmap[x][y], t);
+    if (typeof cellsmap[x][y] === "undefined") cellsmap[x][y] = [];
+    map[x][y][z] = t;
+    setClass(cellsmap[x][y][z], t);
     }
 function coordsToI(x, y)
     {
@@ -165,53 +168,56 @@ function personCoordToDomCoord(x, y)
     {
     return [(CELL_WIDTH*x+LEFT_SHIFT+30), (CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT+50)];
     }
-function personPresent(x, y)
+function personPresent(x, y, z)
     {
+    console.debug("pPresent at",x,y,z);
     for (var i = 0; i < personsmap.length ; i++)
         {
         p = personsmap[i];
-        if ((p['x'] == x) && (p['y'] == y)) return true;
+        console.debug("try this p",p);
+        if ((p['x'] == x) && (p['y'] == y) && (p['z'] == z)) return true;
         }
+    console.debug("false");
     return false;
     }
-function findEquiv(map, t, x, y, seen, ignore)
+function findEquiv(map, t, x, y, z, seen, ignore)
     {
-    if ((typeof ignore === "undefined") && (map[x][y] !== t)) return [];
-    var result = [[x,y]]
+    if ((typeof ignore === "undefined") && (map[x][y][z] !== t)) return [];
+    var result = [[x,y,z]]
     if (typeof seen === "undefined") seen = [];
-    seen.push(coordsToI(x,y));
-    if ((dojo.indexOf(seen, coordsToI(x-1,y)) === -1) && (x > 0) && (map[x-1][y] === t))
-        result = result.concat(findEquiv(map, t, x-1, y, seen));
-    if ((dojo.indexOf(seen, coordsToI(x+1,y)) === -1) && (x < WIDTH-1) && (map[x+1][y] === t))
-        result = result.concat(findEquiv(map, t, x+1, y, seen));
-    if ((dojo.indexOf(seen, coordsToI(x,y-1)) === -1) && (y > 0) && (map[x][y-1] === t))
-        result = result.concat(findEquiv(map, t, x, y-1, seen));
-    if ((dojo.indexOf(seen, coordsToI(x,y+1)) === -1) && (y < HEIGHT-1) && (map[x][y+1] === t))
-        result = result.concat(findEquiv(map, t, x, y+1, seen));
+    seen.push(coordsToI(x,y,z));
+    if ((dojo.indexOf(seen, coordsToI(x-1,y,z)) === -1) && (x > 0) && (map[x-1][y][z] === t))
+        result = result.concat(findEquiv(map, t, x-1, y, z, seen));
+    if ((dojo.indexOf(seen, coordsToI(x+1,y,z)) === -1) && (x < WIDTH-1) && (map[x+1][y][z] === t))
+        result = result.concat(findEquiv(map, t, x+1, y, z, seen));
+    if ((dojo.indexOf(seen, coordsToI(x,y-1,z)) === -1) && (y > 0) && (map[x][y-1][z] === t))
+        result = result.concat(findEquiv(map, t, x, y-1, z, seen));
+    if ((dojo.indexOf(seen, coordsToI(x,y+1,z)) === -1) && (y < HEIGHT-1) && (map[x][y+1][z] === t))
+        result = result.concat(findEquiv(map, t, x, y+1, z, seen));
     return result;
     }
-function getNeighboor(map, x, y, diagonals)
+function getNeighboor(map, x, y, z, diagonals)
     {
     if (typeof diagonals === "undefined") diagonals = false;
     var neighboor = [];
-    if (x>0)                       neighboor.push([x-1, y,   map[x-1][y]]);
-    if (x<WIDTH-1)                 neighboor.push([x+1, y,   map[x+1][y]]);
-    if (y>0)                       neighboor.push([x,   y-1, map[x]  [y-1]]);
-    if (y<HEIGHT-1)                neighboor.push([x,   y+1, map[x]  [y+1]]);
+    if (x>0)                       neighboor.push([x-1, y,   z, map[x-1][y]  [z]]);
+    if (x<WIDTH-1)                 neighboor.push([x+1, y,   z, map[x+1][y]  [z]]);
+    if (y>0)                       neighboor.push([x,   y-1, z, map[x]  [y-1][z]]);
+    if (y<HEIGHT-1)                neighboor.push([x,   y+1, z, map[x]  [y+1][z]]);
 
     /* diagonals */
     if (diagonals)
         {
-        if ((x>0) && (y>0))              neighboor.push([x-1, y-1, map[x-1][y-1]]);
-        if ((x>0) && (y<HEIGHT-1))       neighboor.push([x-1, y+1, map[x-1][y+1]]);
-        if ((x<WIDTH-1) && (y>0))        neighboor.push([x+1, y-1, map[x+1][y-1]]);
-        if ((x<WIDTH-1) && (y<HEIGHT-1)) neighboor.push([x+1, y+1, map[x+1][y+1]]);
+        if ((x>0) && (y>0))              neighboor.push([x-1, y-1, z, map[x-1][y-1][z]]);
+        if ((x>0) && (y<HEIGHT-1))       neighboor.push([x-1, y+1, z, map[x-1][y+1][z]]);
+        if ((x<WIDTH-1) && (y>0))        neighboor.push([x+1, y-1, z, map[x+1][y-1][z]]);
+        if ((x<WIDTH-1) && (y<HEIGHT-1)) neighboor.push([x+1, y+1, z, map[x+1][y+1][z]]);
         }
     return neighboor;
     }
-function addPerson(x, y, t)
+function addPerson(x, y, z, t)
     {
-    domcoords = personCoordToDomCoord(x,y);
+    domcoords = personCoordToDomCoord(x,y,z);
     my_id = persons_sequence;
     persons_sequence += 1;
     domnode= dojo.create("div", {"style":"bottom:"+domcoords[1]+";left:"+domcoords[0]+";",innerHTML:"&nbsp;","pidx":persons_sequence}, dojo.byId("personscontainer"));
@@ -222,6 +228,7 @@ function addPerson(x, y, t)
         tooltipnode: tooltipnode,
         x:x,
         y:y,
+        z:z,
         idx:persons_sequence
         };
     dojo.addClass(p["domnode"], PCLASSES[t]);
@@ -282,21 +289,27 @@ function makeMap()
         {
         for (var y = 0; y < HEIGHT; y++)
             {
-            /* map */
-            if (typeof map[x] === "undefined") map[x] = [];
-            map[x][y] = 0;
-            /* cellsmap */
-            if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
-            cellsmap[x][y] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
-            setClass(cellsmap[x][y], 0);
+            for (var z = 0; z < LAYERS; z++)
+                {
+                /* map */
+                if (typeof map[x] === "undefined") map[x] = [];
+                if (typeof map[x][y] === "undefined") map[x][y] = [];
+                map[x][y][z] = 0;
+                /* cellsmap */
+                if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
+                if (typeof cellsmap[x][y] === "undefined") cellsmap[x][y] = [];
+                cellsmap[x][y][z] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"tmatchz":z,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"));
+                if (z !== 0) dojo.style(cellsmap[x][y][z], "display", "none");
+                setClass(cellsmap[x][y][z], 0);
+                }
             }
         }
     }
 
 /* Game turn functions */
-function checkComb(map, t, x, y)
+function checkComb(map, t, x, y, z)
     {
-    var comb = findEquiv(map, t, x, y);
+    var comb = findEquiv(map, t, x, y, z);
     var newtype = t + 1;
     if (t < -4) newtype = t - 1;
     if ((newtype <= -8) || (newtype >= 8))
@@ -307,77 +320,80 @@ function checkComb(map, t, x, y)
         {
         for (var i = 0; i < comb.length; i ++)
             {
-            u = comb[i][0]; v = comb[i][1];
+            u = comb[i][0]; v = comb[i][1]; w = comb[i][2];
             if (typeof TYPE_SCORE['comb_item'][t] !== undefined)
                 {
                 score += TYPE_SCORE['comb_item'][t];
                 }
-            setType(map, u, v, 0);
+            setType(map, u, v, w, 0);
             }
-        setType(map, x, y, newtype);
-        checkComb(map, newtype, x, y);
+        setType(map, x, y, z, newtype);
+        checkComb(map, newtype, x, y, z);
         if (typeof TYPE_SCORE['comb_result'][newtype] !== undefined)
             {
             score += TYPE_SCORE['comb_result'][newtype];
             }
-        if (newtype > 5) addPerson(x, y, 1);
+        if (newtype > 5) addPerson(x, y, z, 1);
         }
     }
-function matchAll(map, x, y)
+function matchAll(map, x, y, z)
     {
     result = [];
     var possible_types = [];
     var t = 0;
     var equiv = [];
-    if (x>0) possible_types.push(map[x-1][y]);
-    if (x<WIDTH-1) possible_types.push(map[x+1][y]);
-    if (y>0) possible_types.push(map[x][y-1]);
-    if (y<HEIGHT-1) possible_types.push(map[x][y+1]);
+    if (x>0) possible_types.push(map[x-1][y][z]);
+    if (x<WIDTH-1) possible_types.push(map[x+1][y][z]);
+    if (y>0) possible_types.push(map[x][y-1][z]);
+    if (y<HEIGHT-1) possible_types.push(map[x][y+1][z]);
     possible_types = sort_unique(possible_types);
     for(var i = 0; i < possible_types.length ; i++)
         {
         t = possible_types[i];
         if (((t < 1) && (t > -5)) || (t < -6) || (t > 6)) continue; // we can match regular blocks and tombstones
-        equiv = findEquiv(map, t, x, y, [], true);
+        equiv = findEquiv(map, t, x, y, z, [], true);
         if (equiv.length > 2)
             {
-            map[x][y] = t;
-            checkComb(map, t, x, y);
+            map[x][y][z] = t;
+            checkComb(map, t, x, y, z);
             return true;
             }
         }
     return false;
     }
-function bugMove(map, x, y)
+function bugMove(map, x, y, z)
     {
-    var nei = getNeighboor(map, x, y);
+    var nei = getNeighboor(map, x, y, z);
     nei.sort(function() { return (Math.round(Math.random())-0.5); });
     for (var i = 0; i < nei.length; i++)
         {
         n = nei[i];
         if (n[2] === 0)
             {
-            setType(map, n[0], n[1], map[x][y]);
-            setType(map, x, y, 0);
+            setType(map, n[0], n[1], n[2], map[x][y][z]);
+            setType(map, x, y, z, 0);
             break;
             }
         }
     }
-function personMoveTo(p, x, y)
+function personMoveTo(p, x, y, z)
     {
     p['x'] = x;
     p['y'] = y;
-    domcoords = personCoordToDomCoord(x,y);
+    p['z'] = z;
+    domcoords = personCoordToDomCoord(x,y,z);
     dojo.style(p['domnode'], "bottom", domcoords[1]);
     dojo.style(p['domnode'], "left", domcoords[0]);
     }
 function checkLooseCondition()
     {
+    /* Loose condition is only checked for the main layer */
+    var z = 0;
     for (var x = 0; x < WIDTH; x ++)
         {
         for (var y = 0; y < HEIGHT ; y ++)
             {
-            if (map[x][y] === 0)
+            if (map[x][y][z] === 0)
                 {
                 return false;
                 }
@@ -385,17 +401,17 @@ function checkLooseCondition()
         }
     return true;
     }
-function checkBugKill(map, x, y)
+function checkBugKill(map, x, y, z)
     {
-    other_bugs = findEquiv(map, -2, x, y);
+    other_bugs = findEquiv(map, -2, x, y, z);
     for (var i = 0; i < other_bugs.length; i ++)
         {
         ob = other_bugs[i];
-        nei = getNeighboor(map, ob[0], ob[1]);
+        nei = getNeighboor(map, ob[0], ob[1], ob[2]);
         for (var j = 0; j < nei.length; j ++)
             {
             n = nei[j];
-            if (map[n[0]][n[1]] == 0)
+            if (map[n[0]][n[1]][n[2]] == 0)
                 {
                 return 0;
                 }
@@ -408,26 +424,30 @@ function checkBugKill(map, x, y)
             {
             score += TYPE_SCORE['comb_result'][-5];
             }
-        setType(map, ob[0], ob[1], -5);
+        setType(map, ob[0], ob[1], ob[2], -5);
         }
-    checkComb(map, -5, x, y, map[2][0],map[2][1]);
+    checkComb(map, -5, x, y, z);
     return other_bugs.length;
     }
 function doPersonStep(p)
     {
-    var nei = getNeighboor(map, p['x'],p['y'],true);
+    var nei = getNeighboor(map, p['x'],p['y'],p['z'], true);
     var moveOrNot = (Math.random() > 0.5);
-    var onWater = (map[p['x']][p['y']] === 0);
+    var onWater = (map[p['x']][p['y']][p['z']] === 0);
     var couldMove = false;
+    console.debug("dps",p,nei,moveOrNot,onWater, couldMove);
     if ((moveOrNot) || (onWater)) // always move if on water
         {
+        console.debug("i should move");
         nei.sort(function() { return (Math.round(Math.random())-0.5); });
         for (var i = 0; i < nei.length; i++)
             {
+            console.debug("this nei", nei[i]);
             n = nei[i];
-            if ((n[2] > 0) && (!personPresent(n[0], n[1])))
+            if ((n[3] > 0) && (!personPresent(n[0], n[1], n[2])))
                 {
-                personMoveTo(p, n[0], n[1]);
+                console.debug("move");
+                personMoveTo(p, n[0], n[1], n[2]);
                 couldMove = true;
                 break;
                 }
@@ -451,9 +471,12 @@ function doOneStep(changetype)
         {
         for (var y = 0; y < HEIGHT ; y ++)
             {
-            if (map[x][y] === -2)
+            for (var z = 0; z < LAYERS ; z ++)
                 {
-                bugs.push([x,y]);
+                if (map[x][y][z] === -2)
+                    {
+                    bugs.push([x,y,z]);
+                    }
                 }
             }
         }
@@ -461,9 +484,9 @@ function doOneStep(changetype)
         {
         b = bugs[i];
         // We check again the type in case this bug was destroyed by another one
-        if (map[b[0]][b[1]] === -2)
+        if (map[b[0]][b[1]][b[2]] === -2)
             {
-            killcount = checkBugKill(map, b[0], b[1]);
+            killcount = checkBugKill(map, b[0], b[1], b[2]);
             if (killcount > 0)
                 {
                 if (typeof TYPE_SCORE['comb_item'][-2] !== undefined)
@@ -473,7 +496,7 @@ function doOneStep(changetype)
                 }
             else
                 {
-                bugMove(map, b[0], b[1]);
+                bugMove(map, b[0], b[1], b[2]);
                 }
             }
         }
@@ -531,56 +554,60 @@ dojo.addOnLoad(function()
         {
         for (var y = 0; y < HEIGHT; y ++)
             {
-            dojo.connect(cellsmap[x][y], "onclick", function(evt)
+            for (var z = 0; z < LAYERS; z ++)
                 {
-                if (looser) return;
-                x = parseInt(dojo.attr(this, "tmatchx"));
-                y = parseInt(dojo.attr(this, "tmatchy"));
-                celltype = map[x][y];
-                if ((evt.offsetY < 50) && (y > 0))
+                dojo.connect(cellsmap[x][y][z], "onclick", function(evt)
                     {
-                    y-=1;
-                    celltype = map[x][y];
-                    }
-                if ((current_type === -3) && (celltype !== 0)) // eraser
-                    {
-                    if (typeof TYPE_SCORE['played'][current_type] !== undefined)
+                    if (looser) return;
+                    x = parseInt(dojo.attr(this, "tmatchx"));
+                    y = parseInt(dojo.attr(this, "tmatchy"));
+                    z = parseInt(dojo.attr(this, "tmatchz"));
+                    celltype = map[x][y][z];
+                    if ((evt.offsetY < 50) && (y > 0))
                         {
-                        score += TYPE_SCORE['played'][current_type];
+                        y-=1;
+                        celltype = map[x][y][z];
                         }
-                    if (typeof TYPE_SCORE['destroyed'][celltype] !== undefined)
+                    if ((current_type === -3) && (celltype !== 0)) // eraser
                         {
-                        score += TYPE_SCORE['destroyed'][celltype];
-                        }
-                    setType(map, x, y, 0);
-                    doOneStep();
-                    }
-                else if (celltype === 0)
-                    {
-                    if (typeof TYPE_SCORE['played'][current_type] !== undefined)
-                        {
-                        score += TYPE_SCORE['played'][current_type];
-                        }
-                    if (current_type > 0)
-                        {
-                        setType(map, x, y, current_type);
-                        checkComb(map, current_type, x, y);
+                        if (typeof TYPE_SCORE['played'][current_type] !== undefined)
+                            {
+                            score += TYPE_SCORE['played'][current_type];
+                            }
+                        if (typeof TYPE_SCORE['destroyed'][celltype] !== undefined)
+                            {
+                            score += TYPE_SCORE['destroyed'][celltype];
+                            }
+                        setType(map, x, y, z, 0);
                         doOneStep();
                         }
-                    else if (current_type === -4) // matcher
+                    else if (celltype === 0)
                         {
-                        if (matchAll(map, x, y))
+                        if (typeof TYPE_SCORE['played'][current_type] !== undefined)
                             {
+                            score += TYPE_SCORE['played'][current_type];
+                            }
+                        if (current_type > 0)
+                            {
+                            setType(map, x, y, z, current_type);
+                            checkComb(map, current_type, x, y, z);
+                            doOneStep();
+                            }
+                        else if (current_type === -4) // matcher
+                            {
+                            if (matchAll(map, x, y, z))
+                                {
+                                doOneStep();
+                                }
+                            }
+                        else if ((current_type === -1) || (current_type === -2))
+                            {
+                            setType(map, x, y, z, current_type);
                             doOneStep();
                             }
                         }
-                    else if ((current_type === -1) || (current_type === -2))
-                        {
-                        setType(map, x, y, current_type);
-                        doOneStep();
-                        }
-                    }
-                });
+                    });
+                }
             }
         }
     });

@@ -206,3 +206,11 @@
     {
     background-image: url('../img/type_8.png');
     }
+#playzone_sky div.empty
+    {
+    background-image: url('../img/Sky Block.png');
+    }
+#playzone_underground div.empty
+    {
+    background-image: url('../img/Underground Block.png');
+    }

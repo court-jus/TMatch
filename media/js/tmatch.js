@@ -302,7 +302,7 @@ function makeMap()
                 if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
                 if (typeof cellsmap[x][y] === "undefined") cellsmap[x][y] = [];
                 var layer = zToVirtLayer(z);
-                cellsmap[x][y][z] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"tmatchz":z,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"+(layer > 0 : "_sky" ? (layer < 0 : "_underground" ? ""))));
+                cellsmap[x][y][z] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"tmatchz":z,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"+(layer > 0 ? "_sky" : (layer < 0 ? "_underground" : ""))));
                 if (z !== 0) dojo.style(cellsmap[x][y][z], "display", "none");
                 setClass(cellsmap[x][y][z], 0);
                 }

@@ -214,3 +214,11 @@
     {
     background-image: url('../img/Underground Block.png');
     }
+#playzone_sky .bug
+    {
+    background-image: url('../img/Sky Bug.png');
+    }
+#playzone_underground .bug
+    {
+    background-image: url('../img/Underground Bug.png');
+    }

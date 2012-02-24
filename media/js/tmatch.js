@@ -556,6 +556,11 @@ function switchToLayer(target)
                 }
             }
         }
+    for (var i = 0; i < personsmap.length; i ++)
+        {
+        var p = personsmap[i];
+        dojo.style(p.domnode, "display", (target === p.z ? "block" : "none"));
+        }
     }
 
 /* Main */

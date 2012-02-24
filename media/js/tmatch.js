@@ -324,7 +324,7 @@ function checkComb(map, t, x, y, z)
         {
         return;
         }
-    if (comb.length > 2)
+    if (comb.length > 2 + Math.abs(zToVirtLayer(z)))
         {
         for (var i = 0; i < comb.length; i ++)
             {
@@ -361,7 +361,7 @@ function matchAll(map, x, y, z)
         t = possible_types[i];
         if (((t < 1) && (t > -5)) || (t < -6) || (t > 6)) continue; // we can match regular blocks and tombstones
         equiv = findEquiv(map, t, x, y, z, [], true);
-        if (equiv.length > 2)
+        if (equiv.length > 2 + Math.abs(zToVirtLayer(z)))
             {
             map[x][y][z] = t;
             checkComb(map, t, x, y, z);

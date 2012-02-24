@@ -101,16 +101,12 @@ function randomizeMap()
     {
     /*
     *
-    setType(map, 0, 0, -7);
-    setType(map, 2, 1, -7);
-    setType(map, 0, 1, -7);
-    setType(map, 1, 1, -7);
-    setType(map, 3, 3, 7);
-    setType(map, 3, 1, 7);
-    setType(map, 0, 2, 7);
-    setType(map, 1, 2, 6);
-    setType(map, 2, 2, 6);
-    addPerson(3,3,9);
+    setType(map, 0, 0, 0, -2);
+    setType(map, 0, 1, 0, 1);
+    setType(map, 0, 2, 0, 1);
+    setType(map, 2, 0, 0, 1);
+    setType(map, 2, 1, 0, 1);
+    setType(map, 2, 2, 0, 1);
     addPerson(0,2,9);
     return;
     /*
@@ -381,7 +377,7 @@ function bugMove(map, x, y, z)
     for (var i = 0; i < nei.length; i++)
         {
         n = nei[i];
-        if (n[2] === 0)
+        if (n[3] === 0)
             {
             setType(map, n[0], n[1], n[2], map[x][y][z]);
             setType(map, x, y, z, 0);

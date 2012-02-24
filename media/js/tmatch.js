@@ -173,14 +173,11 @@ function personCoordToDomCoord(x, y)
     }
 function personPresent(x, y, z)
     {
-    console.debug("pPresent at",x,y,z);
     for (var i = 0; i < personsmap.length ; i++)
         {
         p = personsmap[i];
-        console.debug("try this p",p);
         if ((p['x'] == x) && (p['y'] == y) && (p['z'] == z)) return true;
         }
-    console.debug("false");
     return false;
     }
 function findEquiv(map, t, x, y, z, seen, ignore)
@@ -311,6 +308,17 @@ function makeMap()
     }
 
 /* Game turn functions */
+function fallTile(map, x, y, z)
+    {
+    var l = zToVirtLayer(z);
+    if (l <= 0) return z;
+    var new_l = l - 1;
+    var new_z = virtLayerToZ(new_l);
+    if (map[x][y][new_z] !== 0) return z;
+    setType(map, x, y, new_z, map[x][y][z]);
+    setType(map, x, y, z, 0);
+    return fallTile(map, x, y, new_z);
+    }
 function checkComb(map, t, x, y, z)
     {
     var comb = findEquiv(map, t, x, y, z);
@@ -332,6 +340,7 @@ function checkComb(map, t, x, y, z)
             setType(map, u, v, w, 0);
             }
         setType(map, x, y, z, newtype);
+        z = fallTile(map, x, y, z);
         checkComb(map, newtype, x, y, z);
         if (typeof TYPE_SCORE['comb_result'][newtype] !== undefined)
             {
@@ -439,18 +448,14 @@ function doPersonStep(p)
     var moveOrNot = (Math.random() > 0.5);
     var onWater = (map[p['x']][p['y']][p['z']] === 0);
     var couldMove = false;
-    console.debug("dps",p,nei,moveOrNot,onWater, couldMove);
     if ((moveOrNot) || (onWater)) // always move if on water
         {
-        console.debug("i should move");
         nei.sort(function() { return (Math.round(Math.random())-0.5); });
         for (var i = 0; i < nei.length; i++)
             {
-            console.debug("this nei", nei[i]);
             n = nei[i];
             if ((n[3] > 0) && (!personPresent(n[0], n[1], n[2])))
                 {
-                console.debug("move");
                 personMoveTo(p, n[0], n[1], n[2]);
                 couldMove = true;
                 break;

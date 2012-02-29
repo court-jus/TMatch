@@ -1,11 +1,4 @@
 /* constants, globals */
-    var map = [];
-    var cellsmap = [];
-    var personsmap = [];
-    var stashes = [];
-    var current_stash = 0;
-    var current_layer = 0;
-    var persons_sequence = 0;
     var PCLASSES = {
         "1" : "person1",
         "9" : "queen",
@@ -76,11 +69,18 @@
     var CELL_HEIGHT = 81;
     var LEFT_SHIFT = 121;
     var BOTTOM_SHIFT = 10;
+    var lang_code = obtenirCodeLangueNavig();
+    var map = [];
+    var cellsmap = [];
+    var personsmap = [];
+    var stashes = [];
+    var current_stash = 0;
+    var current_layer = 0;
+    var persons_sequence = 0;
     var current_type = 0;
     var current = null;
     var score = 0;
     var looser = false;
-    var lang_code = obtenirCodeLangueNavig();
     var step = 0;
 /* Randomizers */
 function randomType(randommap)
@@ -279,7 +279,7 @@ function loosePerson(p)
     }
 
 /* Map functions */
-function makeMap()
+function makeMap(loaded_map)
     {
     for (var x = 0; x < WIDTH; x++)
         {
@@ -290,14 +290,14 @@ function makeMap()
                 /* map */
                 if (typeof map[x] === "undefined") map[x] = [];
                 if (typeof map[x][y] === "undefined") map[x][y] = [];
-                map[x][y][z] = 0;
+                map[x][y][z] = (typeof loaded_map === "undefined" ? 0 : loaded_map[x][y][z]);
                 /* cellsmap */
                 if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
                 if (typeof cellsmap[x][y] === "undefined") cellsmap[x][y] = [];
                 var layer = zToVirtLayer(z);
                 cellsmap[x][y][z] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"tmatchz":z,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"+(layer > 0 ? "_sky" : (layer < 0 ? "_underground" : ""))));
                 if (z !== 0) dojo.style(cellsmap[x][y][z], "display", "none");
-                setClass(cellsmap[x][y][z], 0);
+                setClass(cellsmap[x][y][z], map[x][y][zmap[x][y][z]]);
                 }
             }
         }
@@ -564,50 +564,92 @@ function switchToLayer(target)
         }
     }
 
-/* Main */
-dojo.addOnLoad(function()
+function clearGame()
     {
-    /* Prepare UI */
-    current_type = randomType();
-    var container = dojo.create("div", {id: "container"}, dojo.body());
-    current = dojo.create("div", {id: "current", innerHTML:(lang_code === "fr" ? "En cours" : "Current")}, container);
-    dojo.create("div", {id: "score", innerHTML: score}, container);
-    setClass(current, current_type);
-    var stash = dojo.create("div", {id: "stash", innerHTML: (lang_code === "fr" ? "Réserve" : "Stash")}, container);
-    dojo.connect(stash, "onclick", function(evt)
+    for (var i = 0; i < personsmap.length; i++)
         {
-        if (looser) return;
-        var old_stash = stashes[current_stash];
-        var old_person = findPerson(current_stash);
-        var stashed_item = current_type;
-        if (typeof old_person === "undefined") old_person = findPerson(1);
-        stashes[current_stash] = stashed_item;
-        setClass(stash, stashes[current_stash]);
-        if ((typeof old_stash !== "undefined") && (old_stash !== 0))
+        var p = personsmap[i];
+        p.domnode.parentNode.removeChild(p.domnode);
+        }
+    }
+function initGame(savename)
+    {
+    clearGame();
+    map = [];
+    cellsmap = [];
+    personsmap = [];
+    stashes = [];
+    current_stash = 0;
+    current_layer = 0;
+    persons_sequence = 0;
+    current_type = 0;
+    current = dojo.byId('current');
+    score = 0;
+    looser = false;
+    step = 0;
+    if (typeof savename === "undefined")
+        {
+        /* Prepare UI */
+        current_type = randomType();
+        var container = dojo.create("div", {id: "container"}, dojo.body());
+        if (current === null)
             {
-            current_type = old_stash;
-            setClass(current, current_type);
+            current = dojo.create("div", {id: "current", innerHTML:(lang_code === "fr" ? "En cours" : "Current")}, container);
             }
-        else
+        dojo.create("div", {id: "score", innerHTML: score}, container);
+        var stash = dojo.create("div", {id: "stash", innerHTML: (lang_code === "fr" ? "Réserve" : "Stash")}, container);
+        dojo.connect(stash, "onclick", function(evt)
             {
-            current_type = randomType();
-            setClass(current, current_type);
-            }
-        setClass(old_person['tooltipnode'], stashed_item);
-        });
-    var playzone = dojo.create("div", {id: "playzone"}, container);
-    dojo.create("div", {id: "playzone_sky"}, playzone);
-    dojo.create("div", {id: "playzone_underground"}, playzone);
-    dojo.create("div", {id: "personscontainer"}, container);
-    var layerswitcher = dojo.create("div", {id: "layerswitcher"}, container);
-    var upswitch = dojo.create("div", {innerHTML: "&uarr;"}, layerswitcher);
-    dojo.connect(upswitch, "onclick", switchToUpper);
-    var dnswitch = dojo.create("div", {innerHTML: "&darr;"}, layerswitcher);
-    dojo.connect(dnswitch, "onclick", switchToLower);
+            if (looser) return;
+            var old_stash = stashes[current_stash];
+            var old_person = findPerson(current_stash);
+            var stashed_item = current_type;
+            if (typeof old_person === "undefined") old_person = findPerson(1);
+            stashes[current_stash] = stashed_item;
+            setClass(stash, stashes[current_stash]);
+            if ((typeof old_stash !== "undefined") && (old_stash !== 0))
+                {
+                current_type = old_stash;
+                setClass(current, current_type);
+                }
+            else
+                {
+                current_type = randomType();
+                setClass(current, current_type);
+                }
+            setClass(old_person['tooltipnode'], stashed_item);
+            });
+        var playzone = dojo.create("div", {id: "playzone"}, container);
+        dojo.create("div", {id: "playzone_sky"}, playzone);
+        dojo.create("div", {id: "playzone_underground"}, playzone);
+        dojo.create("div", {id: "personscontainer"}, container);
+        var layerswitcher = dojo.create("div", {id: "layerswitcher"}, container);
+        var upswitch = dojo.create("div", {innerHTML: "&uarr;"}, layerswitcher);
+        dojo.connect(upswitch, "onclick", switchToUpper);
+        var dnswitch = dojo.create("div", {innerHTML: "&darr;"}, layerswitcher);
+        dojo.connect(dnswitch, "onclick", switchToLower);
 
-    /* Prepare map */
-    makeMap();
-    randomizeMap();
+        /* Prepare map */
+        makeMap();
+        randomizeMap();
+        }
+    else
+        {
+        var loaded_data = TMatchSaveLoader.load(savename);
+        if (loaded_data === null) initGame();
+        makeMap(loaded_data.map);
+        current_type = loaded_data.current_type;
+        for (var i = 0; i < loaded_data.personsmap.length; i ++)
+            {
+            var p = loaded_data.personsmap[i];
+            addPerson(p.x, p.y, p.z, p.type);
+            }
+        stashes = dojo.clone(loaded_data.stashes);
+        current_stash = loaded_data.current_stash;
+        score = loaded_data.score;
+        looser = false;
+        }
+    setClass(current, current_type);
     for (var x = 0; x < WIDTH ; x ++)
         {
         for (var y = 0; y < HEIGHT; y ++)
@@ -668,4 +710,9 @@ dojo.addOnLoad(function()
                 }
             }
         }
+    }
+/* Main */
+dojo.addOnLoad(function()
+    {
+    initGame();
     });

@@ -583,8 +583,9 @@ function openLoadDialog()
         {
         savename = savegames[i];
         ce_div = dojo.create('div', {innerHTML: savename}, dial.containerNode);
-        dojo.connect(ce_div, "onclick", function()
+        dojo.connect(ce_div, "onclick", function(evt)
             {
+            savename = dojo.attr(evt.target, 'innerHTML');
             initGame(savename);
             dijit.byId('loadDialog').destroyRecursive();
             });

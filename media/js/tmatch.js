@@ -1,3 +1,5 @@
+/* includes */
+dojo.require('dijit.Dialog');
 /* constants, globals */
     var PCLASSES = {
         "1" : "person1",
@@ -297,7 +299,7 @@ function makeMap(loaded_map)
                 var layer = zToVirtLayer(z);
                 cellsmap[x][y][z] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"tmatchz":z,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"+(layer > 0 ? "_sky" : (layer < 0 ? "_underground" : ""))));
                 if (z !== 0) dojo.style(cellsmap[x][y][z], "display", "none");
-                setClass(cellsmap[x][y][z], map[x][y][zmap[x][y][z]]);
+                setClass(cellsmap[x][y][z], map[x][y][z]);
                 }
             }
         }
@@ -572,6 +574,27 @@ function clearGame()
         p.domnode.parentNode.removeChild(p.domnode);
         }
     }
+/* Dialogs */
+function openLoadDialog()
+    {
+    var dial = new dijit.Dialog({id:'loadDialog',style:'width:300px;',title:'Load game'});
+    var savegames = TMatchSaveLoader.listSaves();
+    for (var i in savegames)
+        {
+        savename = savegames[i];
+        ce_div = dojo.create('div', {innerHTML: savename}, dial.containerNode);
+        dojo.connect(ce_div, "onclick", function()
+            {
+            initGame(savename);
+            dijit.byId('loadDialog').destroyRecursive();
+            });
+        console.debug(ce_div, savename);
+        }
+    dial.show();
+    }
+function openSaveDialog()
+    {
+    }
 function initGame(savename)
     {
     clearGame();
@@ -628,6 +651,10 @@ function initGame(savename)
         dojo.connect(upswitch, "onclick", switchToUpper);
         var dnswitch = dojo.create("div", {innerHTML: "&darr;"}, layerswitcher);
         dojo.connect(dnswitch, "onclick", switchToLower);
+        var loadbtn = dojo.create("div", {id:"loadbtn", innerHTML: "Load"}, container)
+        dojo.connect(loadbtn, "onclick", openLoadDialog);
+        var savebtn = dojo.create("div", {id:"savebtn", innerHTML: "Save"}, container)
+        dojo.connect(savebtn, "onclick", openSaveDialog);
 
         /* Prepare map */
         makeMap();

@@ -222,3 +222,21 @@
     {
     background-image: url('../img/Underground Bug.png');
     }
+
+#loadbtn, #savebtn
+    {
+    position: absolute;
+    left: 10px;
+    width: 101px;
+    border: 1px solid black;
+    text-align: center;
+    background-color: white;
+    }
+#loadbtn
+    {
+    bottom: 420px;
+    }
+#savebtn
+    {
+    bottom: 440px;
+    }

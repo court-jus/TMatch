@@ -3,6 +3,8 @@ var TMatchSaveLoader = {
     save: function(savename, map, current_type, score, personsmap, current_stash, stashes)
         {
         var object_to_save = {
+            savename: savename,
+            isTMatchSave: true,
             map: dojo.clone(map),
             current_type: current_type,
             score: score,
@@ -21,14 +23,29 @@ var TMatchSaveLoader = {
                 };
             object_to_save['personsmap'].push(serializable_p);
             }
-        localStorage.setItem(savename, dojo.toJson(object_to_save));
+        localStorage.setItem('TMatch_savegame_' + savename, dojo.toJson(object_to_save));
         },
 
     load: function(savename)
         {
-        var json_data = localStorage.getItem(savename);
+        var json_data = localStorage.getItem('TMatch_savegame_' + savename);
         if (json_data === null) return null;
         return dojo.fromJson(json_data);
+        },
+
+    listSaves: function()
+        {
+        var result = [];
+        for (var i in localStorage)
+            {
+            var stored_data = localStorage[i];
+            if ((typeof stored_data !== "undefined") &&
+                (i.slice(0, 'TMatch_savegame_'.length) === 'TMatch_savegame_'))
+                {
+                result.push(dojo.fromJson(stored_data).savename);
+                }
+            }
+        return result;
         },
 
     _checkAvailability: function()

@@ -595,6 +595,19 @@ function openLoadDialog()
     }
 function openSaveDialog()
     {
+    var dial = new dijit.Dialog({id:'saveDialog',style:'width:300px;',title:'Save game'});
+    var saisie = dojo.create('input', {type: 'text'}, dial.containerNode);
+    var bouton = dojo.create('button', {}, dial.containerNode);
+    dojo.connect(bouton, "onclick", function()
+        {
+        var savename = dojo.attr(saisie, 'value');
+        if (savename !== '')
+            {
+            TMatchSaveLoader.save(savename, map, current_type, score, personsmap, current_stash, stashes);
+            dijit.byId('saveDialog').destroyRecursive();
+            }
+        });
+    dial.show();
     }
 function initGame(savename)
     {

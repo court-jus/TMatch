@@ -33,6 +33,14 @@ var TMatchSaveLoader = {
         return dojo.fromJson(json_data);
         },
 
+    importSave: function(json_data)
+        {
+        var data = dojo.fromJson(json_data);
+        var savename = data.savename;
+        localStorage.setItem('TMatch_savegame_' + savename, json_data);
+        return savename;
+        },
+
     listSaves: function()
         {
         var result = [];

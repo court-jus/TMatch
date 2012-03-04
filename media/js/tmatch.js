@@ -577,36 +577,75 @@ function clearGame()
 /* Dialogs */
 function openLoadDialog()
     {
-    var dial = new dijit.Dialog({id:'loadDialog',style:'width:300px;',title:'Load game'});
+    var dial = dijit.byId('loadDialog');
+    if (dial) dijit.byId('loadDialog').destroyRecursive();
+    dial = new dijit.Dialog({id:'loadDialog',style:'width:500px;',title:'Load game'});
+    var ul = dojo.create('ul', {}, dial.containerNode);
     var savegames = TMatchSaveLoader.listSaves();
+    var li = null;
     for (var i in savegames)
         {
         savename = savegames[i];
-        ce_div = dojo.create('div', {innerHTML: savename}, dial.containerNode);
+        li = dojo.create('li', {}, ul);
+        ce_div = dojo.create('span', {innerHTML: savename}, li);
         dojo.connect(ce_div, "onclick", function(evt)
             {
             savename = dojo.attr(evt.target, 'innerHTML');
             initGame(savename);
             dijit.byId('loadDialog').destroyRecursive();
             });
-        console.debug(ce_div, savename);
+        ce_div = dojo.create('span', {innerHTML: '(Export)', savename: savename}, li);
+        dojo.style(ce_div, "margin-left", "30px");
+        dojo.connect(ce_div, "onclick", function(evt)
+            {
+            savename = dojo.attr(evt.target, 'savename');
+            var loaded_data = TMatchSaveLoader.load(savename);
+            dijit.byId('loadDialog').destroyRecursive();
+            var expDial = dijit.byId('exportDialog');
+            if (!expDial)
+                {
+                expDial = new dijit.Dialog({id:'exportDialog', style:'width: 500px;', title:'Copy this to export'});
+                dojo.create('textarea', {innerHTML: dojo.toJson(loaded_data), rows: 10, cols: 58}, expDial.containerNode);
+                }
+            expDial.show();
+            });
         }
+        dojo.create('div', {innerHTML: 'Or paste your exported savegame here :'}, dial.containerNode);
+        dojo.create('textarea', {id:'importExportedSavegame',rows: 10, cols: 58}, dial.containerNode);
+        var bouton = dojo.create('button', {innerHTML: 'OK'}, dial.containerNode);
+        dojo.connect(bouton, "onclick", function()
+            {
+            try
+                {
+                var savename = TMatchSaveLoader.importSave(dojo.attr('importExportedSavegame', 'value'));
+                initGame(savename)
+                dijit.byId('loadDialog').destroyRecursive();
+                }
+            catch (e)
+                {
+                alert('Incorrect data : '+ e);
+                }
+            });
     dial.show();
     }
 function openSaveDialog()
     {
-    var dial = new dijit.Dialog({id:'saveDialog',style:'width:300px;',title:'Save game'});
-    var saisie = dojo.create('input', {type: 'text'}, dial.containerNode);
-    var bouton = dojo.create('button', {}, dial.containerNode);
-    dojo.connect(bouton, "onclick", function()
+    var dial = dijit.byId('saveDialog');
+    if (!dial)
         {
-        var savename = dojo.attr(saisie, 'value');
-        if (savename !== '')
+        dial = new dijit.Dialog({id:'saveDialog',style:'width:300px;',title:'Save game'});
+        var saisie = dojo.create('input', {type: 'text'}, dial.containerNode);
+        var bouton = dojo.create('button', {innerHTML: 'OK'}, dial.containerNode);
+        dojo.connect(bouton, "onclick", function()
             {
-            TMatchSaveLoader.save(savename, map, current_type, score, personsmap, current_stash, stashes);
-            dijit.byId('saveDialog').destroyRecursive();
-            }
-        });
+            var savename = dojo.attr(saisie, 'value');
+            if (savename !== '')
+                {
+                TMatchSaveLoader.save(savename, map, current_type, score, personsmap, current_stash, stashes);
+                dijit.byId('saveDialog').destroyRecursive();
+                }
+            });
+        }
     dial.show();
     }
 function initGame(savename)
@@ -677,18 +716,24 @@ function initGame(savename)
     else
         {
         var loaded_data = TMatchSaveLoader.load(savename);
-        if (loaded_data === null) initGame();
-        makeMap(loaded_data.map);
-        current_type = loaded_data.current_type;
-        for (var i = 0; i < loaded_data.personsmap.length; i ++)
+        if (loaded_data === null)
             {
-            var p = loaded_data.personsmap[i];
-            addPerson(p.x, p.y, p.z, p.type);
+            initGame();
             }
-        stashes = dojo.clone(loaded_data.stashes);
-        current_stash = loaded_data.current_stash;
-        score = loaded_data.score;
-        looser = false;
+        else
+            {
+            makeMap(loaded_data.map);
+            current_type = loaded_data.current_type;
+            for (var i = 0; i < loaded_data.personsmap.length; i ++)
+                {
+                var p = loaded_data.personsmap[i];
+                addPerson(p.x, p.y, p.z, p.type);
+                }
+            stashes = dojo.clone(loaded_data.stashes);
+            current_stash = loaded_data.current_stash;
+            score = loaded_data.score;
+            looser = false;
+            }
         }
     setClass(current, current_type);
     for (var x = 0; x < WIDTH ; x ++)

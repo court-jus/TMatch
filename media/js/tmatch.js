@@ -732,6 +732,7 @@ function initGame(savename)
             stashes = dojo.clone(loaded_data.stashes);
             current_stash = loaded_data.current_stash;
             score = loaded_data.score;
+            dojo.attr("score", "innerHTML", score);
             looser = false;
             }
         }

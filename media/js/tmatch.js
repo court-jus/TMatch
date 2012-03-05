@@ -570,6 +570,8 @@ function addNewLayer()
             }
         }
     LAYERS += 1;
+    if (LAYERS > 1) dojo.style('upswitch', 'display', 'block');
+    if (LAYERS > 2) dojo.style('dnswitch', 'display', 'block');
     }
 function switchToLayer(target)
     {
@@ -588,6 +590,7 @@ function switchToLayer(target)
         var p = personsmap[i];
         dojo.style(p.domnode, "display", (target === p.z ? "block" : "none"));
         }
+    dojo.attr('currentLayerDisplay', 'innerHTML', zToVirtLayer(target));
     }
 
 function clearGame()
@@ -723,10 +726,13 @@ function initGame(savename)
         dojo.create("div", {id: "playzone_sky"}, playzone);
         dojo.create("div", {id: "playzone_underground"}, playzone);
         dojo.create("div", {id: "personscontainer"}, container);
+        dojo.create("div", {id: 'currentLayerDisplay', innerHTML: '0'}, dojo.create("div", {id: 'currentLayerDisplayContainer'}, container));
         var layerswitcher = dojo.create("div", {id: "layerswitcher"}, container);
-        var upswitch = dojo.create("div", {innerHTML: "&uarr;"}, layerswitcher);
+        var upswitch = dojo.create("div", {id:'upswitch',innerHTML: "&uarr;"}, layerswitcher);
+        dojo.style(upswitch, "display", "none");
         dojo.connect(upswitch, "onclick", switchToUpper);
-        var dnswitch = dojo.create("div", {innerHTML: "&darr;"}, layerswitcher);
+        var dnswitch = dojo.create("div", {id:'dnswitch',innerHTML: "&darr;"}, layerswitcher);
+        dojo.style(dnswitch, "display", "none");
         dojo.connect(dnswitch, "onclick", switchToLower);
         var loadbtn = dojo.create("div", {id:"loadbtn", innerHTML: "Load"}, container)
         dojo.connect(loadbtn, "onclick", openLoadDialog);

@@ -64,9 +64,7 @@ dojo.require('dijit.Dialog');
         };
     var WIDTH = 6;
     var HEIGHT = 6;
-    var LAYERS = 3;
-    var LOWER_LAYER = -1;
-    var UPPER_LAYER = 1;
+    var LAYERS = 1;
     var CELL_WIDTH = 101;
     var CELL_HEIGHT = 81;
     var LEFT_SHIFT = 121;
@@ -538,13 +536,17 @@ function zToVirtLayer(z)
 function switchToUpper()
     {
     current_layer += 1;
-    if (current_layer > UPPER_LAYER) current_layer = LOWER_LAYER;
+    upper_layer = Math.floor(LAYERS / 2);
+    lower_layer = Math.floor((2-LAYERS)/2);
+    if (current_layer > upper_layer) current_layer = lower_layer;
     switchToLayer(virtLayerToZ(current_layer));
     }
 function switchToLower()
     {
     current_layer -= 1;
-    if (current_layer < LOWER_LAYER) current_layer = UPPER_LAYER;
+    upper_layer = Math.floor(LAYERS / 2);
+    lower_layer = Math.floor((2-LAYERS)/2);
+    if (current_layer < lower_layer) current_layer = upper_layer;
     switchToLayer(virtLayerToZ(current_layer));
     }
 function switchToLayer(target)

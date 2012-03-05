@@ -549,6 +549,28 @@ function switchToLower()
     if (current_layer < lower_layer) current_layer = upper_layer;
     switchToLayer(virtLayerToZ(current_layer));
     }
+function addNewLayer()
+    {
+    var new_z = LAYERS;
+    var new_layer = zToVirtLayer(new_z);
+    for (var x = 0; x < WIDTH; x++)
+        {
+        for (var y = 0; y < HEIGHT; y++)
+            {
+            /* map */
+            if (typeof map[x] === "undefined") map[x] = [];
+            if (typeof map[x][y] === "undefined") map[x][y] = [];
+            map[x][y][new_z] = 0;
+            /* cellsmap */
+            if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
+            if (typeof cellsmap[x][y] === "undefined") cellsmap[x][y] = [];
+            cellsmap[x][y][new_z] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"tmatchz":new_z,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"+(new_layer > 0 ? "_sky" : (new_layer < 0 ? "_underground" : ""))));
+            if (new_z !== 0) dojo.style(cellsmap[x][y][new_z], "display", "none");
+            setClass(cellsmap[x][y][new_z], map[x][y][new_z]);
+            }
+        }
+    LAYERS += 1;
+    }
 function switchToLayer(target)
     {
     for (var x = 0; x < WIDTH; x ++)

@@ -605,8 +605,9 @@ function openLoadDialog()
             if (!expDial)
                 {
                 expDial = new dijit.Dialog({id:'exportDialog', style:'width: 500px;', title:'Copy this to export'});
-                dojo.create('textarea', {innerHTML: dojo.toJson(loaded_data), rows: 10, cols: 58}, expDial.containerNode);
+                dojo.create('textarea', {id:'exportTA',innerHTML: dojo.toJson(loaded_data), rows: 10, cols: 58}, expDial.containerNode);
                 }
+            dojo.attr('exportTA', 'innerHTML', dojo.toJson(loaded_data));
             expDial.show();
             });
         }

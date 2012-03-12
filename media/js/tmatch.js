@@ -85,7 +85,7 @@ dojo.require('dijit.Dialog');
 /* Randomizers */
 function randomType(randommap)
     {
-    // if (!randommap) if (step === 0) return -3;
+    if (!randommap) if (step === 0) return 1;
     if (typeof randommap === "undefined") randommap = false;
     var i = Math.random() * 100.0;
     if (i > 99) return 4; // Type 4
@@ -808,6 +808,7 @@ function initGame(savename)
                             }
                         if (current_type > 0)
                             {
+                            Tutorial.showTutorial('FIRST_TILE_PLACED');
                             setType(map, x, y, z, current_type);
                             checkComb(map, current_type, x, y, z);
                             doOneStep();
@@ -829,9 +830,11 @@ function initGame(savename)
                 }
             }
         }
+    Tutorial.showTutorial('GAME_START');
     }
 /* Main */
 dojo.addOnLoad(function()
     {
+    Tutorial.init(lang_code);
     initGame();
     });

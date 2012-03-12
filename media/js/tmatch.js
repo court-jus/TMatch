@@ -343,6 +343,7 @@ function checkComb(map, t, x, y, z)
             score += TYPE_SCORE['comb_result'][newtype];
             }
         if (newtype > 5) addPerson(x, y, z, 1);
+        if (newtype === 7) addNewLayer();
         }
     }
 function matchAll(map, x, y, z)

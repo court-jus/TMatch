@@ -64,9 +64,7 @@ dojo.require('dijit.Dialog');
         };
     var WIDTH = 6;
     var HEIGHT = 6;
-    var LAYERS = 3;
-    var LOWER_LAYER = -1;
-    var UPPER_LAYER = 1;
+    var LAYERS = 1;
     var CELL_WIDTH = 101;
     var CELL_HEIGHT = 81;
     var LEFT_SHIFT = 121;
@@ -345,6 +343,7 @@ function checkComb(map, t, x, y, z)
             score += TYPE_SCORE['comb_result'][newtype];
             }
         if (newtype > 5) addPerson(x, y, z, 1);
+        if (newtype === 7) addNewLayer();
         }
     }
 function matchAll(map, x, y, z)
@@ -538,14 +537,42 @@ function zToVirtLayer(z)
 function switchToUpper()
     {
     current_layer += 1;
-    if (current_layer > UPPER_LAYER) current_layer = LOWER_LAYER;
+    upper_layer = Math.floor(LAYERS / 2);
+    lower_layer = Math.floor((2-LAYERS)/2);
+    if (current_layer > upper_layer) current_layer = lower_layer;
     switchToLayer(virtLayerToZ(current_layer));
     }
 function switchToLower()
     {
     current_layer -= 1;
-    if (current_layer < LOWER_LAYER) current_layer = UPPER_LAYER;
+    upper_layer = Math.floor(LAYERS / 2);
+    lower_layer = Math.floor((2-LAYERS)/2);
+    if (current_layer < lower_layer) current_layer = upper_layer;
     switchToLayer(virtLayerToZ(current_layer));
+    }
+function addNewLayer()
+    {
+    var new_z = LAYERS;
+    var new_layer = zToVirtLayer(new_z);
+    for (var x = 0; x < WIDTH; x++)
+        {
+        for (var y = 0; y < HEIGHT; y++)
+            {
+            /* map */
+            if (typeof map[x] === "undefined") map[x] = [];
+            if (typeof map[x][y] === "undefined") map[x][y] = [];
+            map[x][y][new_z] = 0;
+            /* cellsmap */
+            if (typeof cellsmap[x] === "undefined") cellsmap[x] = [];
+            if (typeof cellsmap[x][y] === "undefined") cellsmap[x][y] = [];
+            cellsmap[x][y][new_z] = dojo.create("div", {"tmatchx":x,"tmatchy":y,"tmatchz":new_z,"style":"bottom:"+(CELL_HEIGHT*(HEIGHT-y-1)+BOTTOM_SHIFT)+";left:"+(CELL_WIDTH*x+LEFT_SHIFT)+";",innerHTML:"&nbsp;"}, dojo.byId("playzone"+(new_layer > 0 ? "_sky" : (new_layer < 0 ? "_underground" : ""))));
+            if (new_z !== 0) dojo.style(cellsmap[x][y][new_z], "display", "none");
+            setClass(cellsmap[x][y][new_z], map[x][y][new_z]);
+            }
+        }
+    LAYERS += 1;
+    if (LAYERS > 1) dojo.style('upswitch', 'display', 'block');
+    if (LAYERS > 2) dojo.style('dnswitch', 'display', 'block');
     }
 function switchToLayer(target)
     {
@@ -564,6 +591,7 @@ function switchToLayer(target)
         var p = personsmap[i];
         dojo.style(p.domnode, "display", (target === p.z ? "block" : "none"));
         }
+    dojo.attr('currentLayerDisplay', 'innerHTML', zToVirtLayer(target));
     }
 
 function clearGame()
@@ -700,10 +728,13 @@ function initGame(savename)
         dojo.create("div", {id: "playzone_sky"}, playzone);
         dojo.create("div", {id: "playzone_underground"}, playzone);
         dojo.create("div", {id: "personscontainer"}, container);
+        dojo.create("div", {id: 'currentLayerDisplay', innerHTML: '0'}, dojo.create("div", {id: 'currentLayerDisplayContainer'}, container));
         var layerswitcher = dojo.create("div", {id: "layerswitcher"}, container);
-        var upswitch = dojo.create("div", {innerHTML: "&uarr;"}, layerswitcher);
+        var upswitch = dojo.create("div", {id:'upswitch',innerHTML: "&uarr;"}, layerswitcher);
+        dojo.style(upswitch, "display", "none");
         dojo.connect(upswitch, "onclick", switchToUpper);
-        var dnswitch = dojo.create("div", {innerHTML: "&darr;"}, layerswitcher);
+        var dnswitch = dojo.create("div", {id:'dnswitch',innerHTML: "&darr;"}, layerswitcher);
+        dojo.style(dnswitch, "display", "none");
         dojo.connect(dnswitch, "onclick", switchToLower);
         var loadbtn = dojo.create("div", {id:"loadbtn", innerHTML: "Load"}, container)
         dojo.connect(loadbtn, "onclick", openLoadDialog);

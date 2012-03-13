@@ -736,9 +736,9 @@ function initGame(savename)
         var dnswitch = dojo.create("div", {id:'dnswitch',innerHTML: "&darr;"}, layerswitcher);
         dojo.style(dnswitch, "display", "none");
         dojo.connect(dnswitch, "onclick", switchToLower);
-        var loadbtn = dojo.create("div", {id:"loadbtn", innerHTML: "Load"}, container)
+        var loadbtn = dojo.create("div", {id:"loadbtn", innerHTML: (lang_code === "fr" ? "Charger" : "Load")}, container)
         dojo.connect(loadbtn, "onclick", openLoadDialog);
-        var savebtn = dojo.create("div", {id:"savebtn", innerHTML: "Save"}, container)
+        var savebtn = dojo.create("div", {id:"savebtn", innerHTML: (lang_code === "fr" ? "Sauver" : "Save")}, container)
         dojo.connect(savebtn, "onclick", openSaveDialog);
 
         /* Prepare map */

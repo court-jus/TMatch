@@ -2,7 +2,7 @@ name: tmatch
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -51,16 +51,65 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/images/block.png
+    - assets/images/BlocksExplanation.png
+    - assets/images/Blue Diamond.png
+    - assets/images/Brown Block.png
+    - assets/images/Brown Bubble.png
+    - assets/images/BugsExplanation.png
+    - assets/images/Dirt Block.png
+    - assets/images/Dirt Bubble.png
+    - assets/images/Door Tall Bubble.png
+    - assets/images/Door Tall Closed.png
+    - assets/images/EmptyNegativeBlock.png
+    - assets/images/Enemy Bug Bubble.png
+    - assets/images/Enemy Bug.png
+    - assets/images/eraser.png
+    - assets/images/Gem Blue.png
+    - assets/images/Gem Green.png
+    - assets/images/Gem Orange.png
+    - assets/images/Grass Block.png
+    - assets/images/Grass Bubble.png
+    - assets/images/Green Diamond.png
+    - assets/images/jumping_block.png
+    - assets/images/Key Bubble.png
+    - assets/images/Key.png
+    - assets/images/matcher.png
+    - assets/images/Orange Diamond.png
+    - assets/images/person1.png
+    - assets/images/Plain Block.png
+    - assets/images/Plain Bubble.png
+    - assets/images/queen.png
+    - assets/images/Sky Block.png
+    - assets/images/Sky Bug.png
+    - assets/images/Star Bubble.png
+    - assets/images/Star.png
+    - assets/images/Stone Block.png
+    - assets/images/Stone Bubble.png
+    - assets/images/type_1.png
+    - assets/images/type_2.png
+    - assets/images/type_3.png
+    - assets/images/type_4.png
+    - assets/images/type_5.png
+    - assets/images/type_6.png
+    - assets/images/type_7.png
+    - assets/images/type_8.png
+    - assets/images/Underground Block.png
+    - assets/images/Underground Bug.png
+    - assets/images/Wall Block.png
+    - assets/images/Wall Bubble.png
+    - assets/images/Water Block.png
+    - assets/images/Water Bug.png
+    - assets/images/Water Bug2.png
+    - assets/images/Wood Block.png
+    - assets/images/Wood Bubble.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

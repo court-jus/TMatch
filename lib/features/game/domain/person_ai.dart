@@ -11,11 +11,17 @@ class PersonAI {
   PersonAI(this._random);
 
   /// Advances one person step. Returns updated persons list.
+  /// Each person's move is checked against already-moved persons' new positions
+  /// to prevent two persons from ending up on the same tile.
   List<Person> stepAll(List<Person> persons, Grid grid) {
     final result = <Person>[];
 
-    for (final person in persons) {
-      final stepped = _step(person, grid, persons);
+    for (var i = 0; i < persons.length; i++) {
+      final person = persons[i];
+      // Snapshot: already-moved persons (new positions) + unprocessed persons (old positions)
+      final remaining = persons.sublist(i + 1);
+      final currentSnapshot = [...result, ...remaining];
+      final stepped = _step(person, grid, currentSnapshot);
       if (stepped != null) {
         result.add(stepped);
       }
@@ -35,11 +41,19 @@ class PersonAI {
 
     if (movableNeighbors.isNotEmpty) {
       final target = movableNeighbors[_random.nextInt(movableNeighbors.length)];
+      print(
+        '[PERSON] p=${person.id} (${person.position.x},${person.position.y},${person.position.z}) -> (${target.x},${target.y},${target.z})',
+      );
       return person.copyWith(position: target);
     }
 
     // Drown only if the tile under the person disappeared
-    if (!_isWalkable(grid.getCell(person.position))) return null;
+    if (!_isWalkable(grid.getCell(person.position))) {
+      print(
+        '[PERSON] p=${person.id} (${person.position.x},${person.position.y},${person.position.z}) drown',
+      );
+      return null;
+    }
 
     return person;
   }

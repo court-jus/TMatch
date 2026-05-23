@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:tmatch/core/models/game_state.dart' show GameOverReason;
 import 'package:tmatch/core/models/game_state.dart';
 import 'package:tmatch/core/models/grid.dart';
 import 'package:tmatch/core/models/person.dart';

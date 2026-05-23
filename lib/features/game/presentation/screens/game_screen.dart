@@ -8,9 +8,9 @@ import 'package:tmatch/features/game/presentation/providers/game_provider.dart';
 import 'package:tmatch/features/game/presentation/widgets/current_tile_display.dart';
 import 'package:tmatch/features/game/presentation/widgets/game_board.dart';
 import 'package:tmatch/features/game/presentation/widgets/floor_switcher.dart';
+import 'package:tmatch/features/game/presentation/widgets/person_widget.dart';
 import 'package:tmatch/features/game/presentation/widgets/score_display.dart';
 import 'package:tmatch/features/game/presentation/widgets/stash_display.dart';
-import 'package:tmatch/features/game/presentation/widgets/tile_widget.dart';
 
 class GameScreen extends ConsumerWidget {
   const GameScreen({super.key});
@@ -253,7 +253,7 @@ class _TopBar extends StatelessWidget {
                                   ),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: TileWidget(tile: person.type),
+                                child: PersonWidget(tile: person.type),
                               ),
                             ),
                             if (isSelected)

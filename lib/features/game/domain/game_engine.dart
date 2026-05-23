@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:tmatch/core/constants/type_scores.dart';
 import 'package:tmatch/core/models/game_state.dart';
+import 'package:tmatch/core/models/person.dart';
 import 'package:tmatch/core/models/position.dart';
 import 'package:tmatch/core/models/tile_type.dart';
 import 'package:tmatch/core/utils/floor_mapper.dart';
@@ -50,12 +51,10 @@ class GameEngine {
         score += TypeScores.played[-3] ?? 0;
         score += TypeScores.destroyed[targetCell.value] ?? 0;
         grid = grid.setCell(pos, const EmptyTile());
+        final nextTile = _randomizer.next();
+        print('[NEXT] t=${nextTile.value}');
         return _advanceStep(
-          state.copyWith(
-            grid: grid,
-            score: score,
-            currentTile: _randomizer.next(),
-          ),
+          state.copyWith(grid: grid, score: score, currentTile: nextTile),
         );
       }
       return state;
@@ -72,14 +71,21 @@ class GameEngine {
 
     // Handle matcher (-4)
     if (tileToPlace is StarTile) {
-      final (matchedGrid, matchScore, matched) = _tryMatchAll(grid, pos);
+      final (matchedGrid, matchScore, matched, matchPersons) = _tryMatchAll(
+        grid,
+        pos,
+        state.persons,
+      );
       if (matched) {
         score += matchScore;
+        final nextTile = _randomizer.next();
+        print('[NEXT] t=${nextTile.value}');
         return _advanceStep(
           state.copyWith(
             grid: matchedGrid,
             score: score,
-            currentTile: _randomizer.next(),
+            currentTile: nextTile,
+            persons: [...state.persons, ...matchPersons],
           ),
         );
       }
@@ -88,32 +94,46 @@ class GameEngine {
 
     // Handle door (-1) and bug (-2) - place without combination
     if (tileToPlace is DoorTile || tileToPlace is EnemyTile) {
+      final nextTile = _randomizer.next();
+      print('[NEXT] t=${nextTile.value}');
       return _advanceStep(
-        state.copyWith(
-          grid: grid,
-          score: score,
-          currentTile: _randomizer.next(),
-        ),
+        state.copyWith(grid: grid, score: score, currentTile: nextTile),
       );
     }
 
     // Regular tile or diamond - check combinations
     print('[PLACE] (${pos.x},${pos.y},${pos.z}) t=${tileToPlace.value}');
-    final (comboGrid, comboScore) = _resolveCombinations(grid, pos);
+    final (comboGrid, comboScore, comboPersons) = _resolveCombinations(
+      grid,
+      pos,
+      state.persons,
+    );
     grid = comboGrid;
     score += comboScore;
 
+    final nextTile = _randomizer.next();
+    print('[NEXT] t=${nextTile.value}');
     return _advanceStep(
-      state.copyWith(grid: grid, score: score, currentTile: _randomizer.next()),
+      state.copyWith(
+        grid: grid,
+        score: score,
+        currentTile: nextTile,
+        persons: [...state.persons, ...comboPersons],
+      ),
     );
   }
 
   /// Checks for combinations at [pos] and resolves the full chain iteratively.
-  /// Returns the updated grid and the total score earned from the chain.
-  (Grid, int) _resolveCombinations(Grid grid, Position pos) {
+  /// Returns the updated grid, the total score, and any newly spawned persons.
+  (Grid, int, List<Person>) _resolveCombinations(
+    Grid grid,
+    Position pos,
+    List<Person> existingPersons,
+  ) {
     var result = grid;
     var totalScore = 0;
     var checkPos = pos;
+    var spawnedPersons = <Person>[];
 
     while (true) {
       final connected = _resolver.findConnected(result, checkPos);
@@ -146,7 +166,15 @@ class GameEngine {
 
       // Spawn person if type >= 6
       if (upgraded is RegularTile && upgraded.value >= 6) {
-        // Person spawning is handled in the provider
+        final maxId = existingPersons.isEmpty
+            ? -1
+            : existingPersons.map((p) => p.id).reduce(max);
+        final nextId = maxId + 1 + spawnedPersons.length;
+        final allCurrentPersons = [...existingPersons, ...spawnedPersons];
+        final spawnPos = _findFreePosition(checkPos, allCurrentPersons, result);
+        spawnedPersons.add(
+          Person(id: nextId, type: PersonTile(10), position: spawnPos),
+        );
       }
 
       // Add new floor if type 7
@@ -158,13 +186,17 @@ class GameEngine {
       // (loop continues with the upgraded tile at checkPos)
     }
 
-    return (result, totalScore);
+    return (result, totalScore, spawnedPersons);
   }
 
   /// Attempts to match each neighbor type by temporarily placing it at [pos].
   /// If a match is found, applies the full combination chain.
-  /// Returns (updatedGrid, score, matched).
-  (Grid, int, bool) _tryMatchAll(Grid grid, Position pos) {
+  /// Returns (updatedGrid, score, matched, spawnedPersons).
+  (Grid, int, bool, List<Person>) _tryMatchAll(
+    Grid grid,
+    Position pos,
+    List<Person> existingPersons,
+  ) {
     final neighborTypes = <TileType>{
       if (pos.x > 0) grid.getCell(Position(pos.x - 1, pos.y, pos.z)),
       if (pos.x < grid.width - 1)
@@ -185,29 +217,18 @@ class GameEngine {
       final connected = _resolver.findConnected(testGrid, pos);
       final upgraded = _resolver.checkCombination(testGrid, connected, pos);
       if (upgraded != null) {
-        final oldType = testGrid.getCell(pos);
-        var totalScore = 0;
-        for (final cellPos in connected) {
-          final cellType = testGrid.getCell(cellPos);
-          print(
-            '[CLEAR] (${cellPos.x},${cellPos.y},${cellPos.z}) t=${cellType.value}',
-          );
-          totalScore += TypeScores.combItem[cellType.value] ?? 0;
-          testGrid = testGrid.setCell(cellPos, const EmptyTile());
-        }
-        testGrid = testGrid.setCell(pos, upgraded);
-        print(
-          '[UPGRADE] (${pos.x},${pos.y},${pos.z}) old=${oldType.value} new=${upgraded.value}',
+        // Delegate full resolution (clearing, upgrade, gravity, chain reactions,
+        // scoring, person spawning) to _resolveCombinations
+        final (chainGrid, chainScore, chainPersons) = _resolveCombinations(
+          testGrid,
+          pos,
+          existingPersons,
         );
-        testGrid = _gravity.apply(testGrid, pos);
-        totalScore += TypeScores.combResult[upgraded.value] ?? 0;
-        // Continue chain reactions
-        final (chainGrid, chainScore) = _resolveCombinations(testGrid, pos);
-        return (chainGrid, totalScore + chainScore, true);
+        return (chainGrid, chainScore, true, chainPersons);
       }
     }
 
-    return (grid, 0, false);
+    return (grid, 0, false, []);
   }
 
   GameState _advanceStep(GameState state) {
@@ -217,18 +238,25 @@ class GameEngine {
     // Process bugs
     final (bugGrid, bugsKilled, diamondPositions) = _bugs.processAll(grid);
     grid = bugGrid;
+    var newPersons = <Person>[];
     if (bugsKilled > 0) {
       score += bugsKilled * (TypeScores.combItem[-2] ?? 0);
       score += TypeScores.combResult[-5] ?? 0;
       for (final pos in diamondPositions) {
-        final (comboGrid, comboScore) = _resolveCombinations(grid, pos);
+        final (comboGrid, comboScore, comboPersons) = _resolveCombinations(
+          grid,
+          pos,
+          [...state.persons, ...newPersons],
+        );
         grid = comboGrid;
         score += comboScore;
+        newPersons.addAll(comboPersons);
       }
     }
 
-    // Process persons
-    final persons = _personAI.stepAll(state.persons, grid);
+    // Process existing persons, then append newly spawned ones
+    final processedPersons = _personAI.stepAll(state.persons, grid);
+    final persons = [...processedPersons, ...newPersons];
 
     // Check loose condition: main floor (z=0) completely filled
     final isGridFull = _checkGridFull(grid);
@@ -269,6 +297,24 @@ class GameEngine {
     // Current tile can't be placed; check stashes
     if (_canAnyStashBePlaced(state.stashes, state.grid)) return state;
 
+    // Star escape hatch: if the current tile is a Star with no valid placement,
+    // check whether the player can escape by stashing.
+    if (state.currentTile is StarTile) {
+      final allStashesAreStars =
+          state.stashes.isNotEmpty &&
+          state.stashes.values.every((s) => s is StarTile);
+      if (allStashesAreStars) {
+        // Every stash is occupied by a Star → cannot escape by swapping.
+        // Re-roll a non-Star and recheck viability.
+        return checkPlacementViability(
+          state.copyWith(currentTile: _randomizer.nextExcluding({-4})),
+        );
+      }
+      // Empty stash slot or a non-Star stash exists → player can stash
+      // the current Star to get a new tile. Do not end the game.
+      return state;
+    }
+
     return state.copyWith(
       isGameOver: true,
       gameOverReason: GameOverReason.noValidPlacement,
@@ -276,6 +322,10 @@ class GameEngine {
   }
 
   bool _hasValidPlacement(TileType tile, Grid grid) {
+    if (tile.value == -4) {
+      return _hasValidStarPlacement(grid);
+    }
+
     for (var x = 0; x < grid.width; x++) {
       for (var y = 0; y < grid.height; y++) {
         for (var z = 0; z < grid.floors; z++) {
@@ -284,9 +334,6 @@ class GameEngine {
           if (tile.value == -3) {
             // Eraser: needs a non-empty cell to erase
             if (!cell.isEmpty) return true;
-          } else if (tile.value == -4) {
-            // Matcher: needs an empty cell adjacent to a matchable tile
-            if (cell.isEmpty && _hasAdjacentMatchable(pos, grid)) return true;
           } else {
             // Everything else: needs an empty cell
             if (cell.isEmpty) return true;
@@ -297,27 +344,49 @@ class GameEngine {
     return false;
   }
 
+  /// Returns true if placing a Star anywhere on the grid would form a match.
+  bool _hasValidStarPlacement(Grid grid) {
+    for (var x = 0; x < grid.width; x++) {
+      for (var y = 0; y < grid.height; y++) {
+        for (var z = 0; z < grid.floors; z++) {
+          final pos = Position(x, y, z);
+          if (!grid.getCell(pos).isEmpty) continue;
+          if (_wouldStarMatchAt(pos, grid)) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /// Simulates a Star placed at [pos] by trying each neighbor type.
+  /// Returns true if any neighbor type would form a valid combination.
+  bool _wouldStarMatchAt(Position pos, Grid grid) {
+    final neighborTypes = <TileType>{
+      if (pos.x > 0) grid.getCell(Position(pos.x - 1, pos.y, pos.z)),
+      if (pos.x < grid.width - 1)
+        grid.getCell(Position(pos.x + 1, pos.y, pos.z)),
+      if (pos.y > 0) grid.getCell(Position(pos.x, pos.y - 1, pos.z)),
+      if (pos.y < grid.height - 1)
+        grid.getCell(Position(pos.x, pos.y + 1, pos.z)),
+    };
+
+    for (final type in neighborTypes) {
+      if (type.isEmpty) continue;
+      if (type is DiamondTile) continue;
+      if (type is RegularTile && type.value > 6) continue;
+
+      var testGrid = grid.setCell(pos, type);
+      final connected = _resolver.findConnected(testGrid, pos);
+      final upgraded = _resolver.checkCombination(testGrid, connected, pos);
+      if (upgraded != null) return true;
+    }
+    return false;
+  }
+
   bool _canAnyStashBePlaced(Map<int, TileType?> stashes, Grid grid) {
     return stashes.values.any(
       (stash) => stash != null && _hasValidPlacement(stash, grid),
     );
-  }
-
-  bool _hasAdjacentMatchable(Position pos, Grid grid) {
-    for (final (dx, dy) in _neighborOffsets) {
-      final nx = pos.x + dx;
-      final ny = pos.y + dy;
-      if (nx < 0 || nx >= grid.width || ny < 0 || ny >= grid.height) {
-        continue;
-      }
-      final neighbor = grid.getCell(Position(nx, ny, pos.z));
-      if (neighbor.isEmpty) continue;
-      if (neighbor is DiamondTile) continue;
-      if (neighbor is DoorTile) continue;
-      if (neighbor is EnemyTile) continue;
-      return true;
-    }
-    return false;
   }
 
   bool _checkGridFull(Grid grid) {
@@ -327,6 +396,42 @@ class GameEngine {
       }
     }
     return true;
+  }
+
+  /// Finds the nearest free position to [preferred] not occupied by a person.
+  /// Falls back to [preferred] if no free cell is found.
+  Position _findFreePosition(
+    Position preferred,
+    List<Person> allPersons,
+    Grid grid,
+  ) {
+    if (!allPersons.any((p) => p.position == preferred)) {
+      return preferred;
+    }
+
+    final visited = <Position>{preferred};
+    final queue = <Position>[preferred];
+
+    while (queue.isNotEmpty) {
+      final current = queue.removeAt(0);
+      for (final (dx, dy) in _neighborOffsets) {
+        final next = Position(current.x + dx, current.y + dy, preferred.z);
+        if (next.x < 0 ||
+            next.x >= grid.width ||
+            next.y < 0 ||
+            next.y >= grid.height ||
+            visited.contains(next)) {
+          continue;
+        }
+        if (!allPersons.any((p) => p.position == next)) {
+          return next;
+        }
+        visited.add(next);
+        queue.add(next);
+      }
+    }
+
+    return preferred;
   }
 }
 

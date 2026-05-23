@@ -45,7 +45,7 @@ class GameNotifier extends _$GameNotifier {
     newState = newState.copyWith(
       grid: grid,
       currentTile: _randomizer.next(),
-      persons: [Person(id: 0, type: const RegularTile(9), position: queenPos)],
+      persons: [Person(id: 0, type: const PersonTile(9), position: queenPos)],
       selectedPersonId: 0,
     );
 
@@ -127,6 +127,7 @@ class GameNotifier extends _$GameNotifier {
       0,
     );
     grid = grid.setCell(queenPos, const RegularTile(1));
+    print('[INIT] queen at ($queenPos) t=1');
 
     for (var x = 0; x < GameConstants.gridWidth; x++) {
       for (var y = 0; y < GameConstants.gridHeight; y++) {
@@ -134,8 +135,10 @@ class GameNotifier extends _$GameNotifier {
           continue;
         }
         if (_random.nextDouble() < GameConstants.mapFillPercent) {
+          final tile = _randomizer.next(forMapFill: true);
           final pos = Position(x, y, 0);
-          grid = grid.setCell(pos, _randomizer.next(forMapFill: true));
+          grid = grid.setCell(pos, tile);
+          print('[INIT] ($x, $y, 0) t=${tile.value}');
         }
       }
     }

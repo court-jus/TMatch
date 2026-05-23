@@ -5,6 +5,7 @@ import 'package:tmatch/core/models/position.dart';
 import 'package:tmatch/core/models/tile_type.dart';
 import 'package:tmatch/core/utils/floor_mapper.dart';
 import 'package:tmatch/core/models/grid.dart';
+import 'package:tmatch/features/game/presentation/widgets/person_widget.dart';
 import 'package:tmatch/features/game/presentation/widgets/tile_widget.dart';
 
 class GameBoard extends StatelessWidget {
@@ -137,7 +138,7 @@ class GameBoard extends StatelessWidget {
                     ),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: TileWidget(tile: personHere.type),
+                  child: PersonWidget(tile: personHere.type),
                 ),
               ),
             if (personHere != null && stashes[personHere.id] != null)

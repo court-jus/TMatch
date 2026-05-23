@@ -41,7 +41,9 @@ class GameBoard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final scale = (constraints.maxWidth / naturalWidth).clamp(
+        final scaleX = constraints.maxWidth / naturalWidth;
+        final scaleY = constraints.maxHeight / naturalHeight;
+        final scale = (scaleX < scaleY ? scaleX : scaleY).clamp(
           0.0,
           GameConstants.maxGridScale,
         );

@@ -39,7 +39,7 @@ final class RegularTile extends TileType {
     3 => 'assets/images/Grass Block.png',
     4 => 'assets/images/Plain Block.png',
     5 => 'assets/images/Stone Block.png',
-    6 => 'assets/images/Wood Block.png',
+    6 => 'assets/images/House Block.png',
     7 => 'assets/images/Wall Block.png',
     _ => '',
   };
@@ -50,7 +50,7 @@ final class RegularTile extends TileType {
     3 => 'assets/images/Grass Bubble.png',
     4 => 'assets/images/Plain Bubble.png',
     5 => 'assets/images/Stone Bubble.png',
-    6 => 'assets/images/Wood Bubble.png',
+    6 => 'assets/images/House Bubble.png',
     7 => 'assets/images/Wall Bubble.png',
     _ => '',
   };

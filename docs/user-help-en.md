@@ -39,7 +39,7 @@ Sometimes, you have to place "Bugs". Bugs move freely on the board and prevent y
 
 # Little characters
 
-At the beginning, there is only the queen. A new little guy will appear each time you make a match of level 5 or more (wood plank).
+At the beginning, there is only the queen. A new little guy will appear each time you make a match of level 5 or more (house block).
 
 They move on every "non water" cell. They can move on diagonals.
 

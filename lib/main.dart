@@ -1,16 +1,25 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:tmatch/core/services/hive_service.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:tmatch/features/game/presentation/providers/game_provider.dart';
 import 'features/game/presentation/screens/game_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final hiveService = HiveService();
-  await hiveService.init();
-  await Hive.openBox<Map<String, dynamic>>(HiveService.savesBoxName);
+  final appDir = await getApplicationDocumentsDirectory();
+  final saveDir = Directory('${appDir.path}/tmatch_saves');
+  if (!await saveDir.exists()) {
+    await saveDir.create(recursive: true);
+  }
 
-  runApp(const ProviderScope(child: TMatchApp()));
+  runApp(ProviderScope(
+    overrides: [
+      saveDirProvider.overrideWithValue(saveDir.path),
+    ],
+    child: const TMatchApp(),
+  ));
 }
 
 class TMatchApp extends StatelessWidget {

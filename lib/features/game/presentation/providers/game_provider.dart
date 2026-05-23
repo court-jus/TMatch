@@ -1,12 +1,12 @@
 import 'dart:math';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tmatch/core/constants/game_constants.dart';
 import 'package:tmatch/core/models/game_state.dart';
 import 'package:tmatch/core/models/person.dart';
 import 'package:tmatch/core/models/position.dart';
 import 'package:tmatch/core/models/tile_type.dart';
-import 'package:tmatch/core/services/hive_provider.dart';
 import 'package:tmatch/core/utils/floor_mapper.dart';
 import 'package:tmatch/core/utils/randomizer.dart';
 import 'package:tmatch/features/game/data/game_repository.dart';
@@ -16,6 +16,10 @@ import 'package:tmatch/core/models/grid.dart';
 import 'package:tmatch/features/game/domain/person_ai.dart';
 
 part 'game_provider.g.dart';
+
+final saveDirProvider = Provider<String>((ref) {
+  throw UnimplementedError('saveDirProvider must be overridden in main()');
+});
 
 @riverpod
 class GameNotifier extends _$GameNotifier {
@@ -149,6 +153,6 @@ class GameNotifier extends _$GameNotifier {
 
 @Riverpod(keepAlive: true)
 GameRepository gameRepository(GameRepositoryRef ref) {
-  final hiveService = ref.watch(hiveServiceProvider);
-  return GameRepository(hiveService.savesBox);
+  final saveDir = ref.watch(saveDirProvider);
+  return GameRepository(saveDir);
 }

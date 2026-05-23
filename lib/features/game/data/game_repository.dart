@@ -1,6 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tmatch/core/models/game_state.dart';
 import 'package:tmatch/core/models/grid.dart';
 import 'package:tmatch/core/models/person.dart';
@@ -8,16 +8,24 @@ import 'package:tmatch/core/models/position.dart';
 import 'package:tmatch/core/models/tile_type.dart';
 
 class GameRepository {
-  final Box<Map<String, dynamic>> _box;
+  final String _saveDir;
 
-  GameRepository(this._box);
+  GameRepository(this._saveDir);
 
   List<String> listSaves() {
-    return _box.values.map((data) => data['savename'] as String).toList();
+    final dir = Directory(_saveDir);
+    if (!dir.existsSync()) return [];
+    return dir
+        .listSync()
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.json'))
+        .map((f) => f.uri.pathSegments.last.replaceAll('.json', ''))
+        .toList();
   }
 
   void save(String name, GameState state) {
-    _box.put(name, {
+    final file = File('$_saveDir/$name.json');
+    file.writeAsStringSync(jsonEncode({
       'savename': name,
       'isTMatchSave': true,
       'grid': _serializeGrid(state.grid),
@@ -29,25 +37,33 @@ class GameRepository {
       'step': state.step,
       'is_game_over': state.isGameOver,
       'game_over_reason': state.gameOverReason?.name,
-    });
+    }));
   }
 
   GameState? load(String name) {
-    final data = _box.get(name);
-    if (data == null) return null;
+    final file = File('$_saveDir/$name.json');
+    if (!file.existsSync()) return null;
+    final data = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
     return _deserializeGameState(data);
+  }
+
+  void delete(String name) {
+    final file = File('$_saveDir/$name.json');
+    if (file.existsSync()) {
+      file.deleteSync();
+    }
+  }
+
+  String exportSave(String name) {
+    final file = File('$_saveDir/$name.json');
+    return file.readAsStringSync();
   }
 
   String importSave(String jsonData) {
     final data = jsonDecode(jsonData) as Map<String, dynamic>;
     final savename = data['savename'] as String;
-    _box.put(savename, data);
+    File('$_saveDir/$savename.json').writeAsStringSync(jsonData);
     return savename;
-  }
-
-  String exportSave(String name) {
-    final data = _box.get(name);
-    return jsonEncode(data);
   }
 
   Map<String, dynamic> _serializeGrid(Grid grid) {

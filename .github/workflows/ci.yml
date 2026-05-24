@@ -136,7 +136,7 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
       - name: Build
-        run: flutter build web --base-href=/tmatch/
+        run: flutter build web --base-href=/TMatch/
       - name: package
         run: |
           cd build

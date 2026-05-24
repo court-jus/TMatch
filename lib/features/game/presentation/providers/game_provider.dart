@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tmatch/core/constants/game_constants.dart';
@@ -14,12 +15,9 @@ import 'package:tmatch/features/game/domain/bug_system.dart';
 import 'package:tmatch/features/game/domain/game_engine.dart';
 import 'package:tmatch/core/models/grid.dart';
 import 'package:tmatch/features/game/domain/person_ai.dart';
+import 'package:tmatch/features/game/presentation/providers/star_animation_provider.dart';
 
 part 'game_provider.g.dart';
-
-final saveDirProvider = Provider<String>((ref) {
-  throw UnimplementedError('saveDirProvider must be overridden in main()');
-});
 
 @riverpod
 class GameNotifier extends _$GameNotifier {
@@ -43,6 +41,9 @@ class GameNotifier extends _$GameNotifier {
   }
 
   void newGame() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(starAnimationNotifierProvider.notifier).clear();
+    });
     var newState = GameState.initial();
     final (grid, queenPos) = _initializeGrid();
 
@@ -58,7 +59,12 @@ class GameNotifier extends _$GameNotifier {
 
   void placeTile(int x, int y) {
     if (state.isGameOver) return;
+    final oldScore = state.score;
     state = _engine.placeTile(state, x, y);
+    final delta = state.score - oldScore;
+    if (delta >= 100) {
+      ref.read(starAnimationNotifierProvider.notifier).trigger(x, y, delta);
+    }
   }
 
   void swapWithStash() {
@@ -153,6 +159,5 @@ class GameNotifier extends _$GameNotifier {
 
 @Riverpod(keepAlive: true)
 GameRepository gameRepository(GameRepositoryRef ref) {
-  final saveDir = ref.watch(saveDirProvider);
-  return GameRepository(saveDir);
+  throw UnimplementedError('gameRepository must be overridden in main()');
 }

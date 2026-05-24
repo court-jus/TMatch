@@ -16,6 +16,7 @@ class GameBoard extends StatelessWidget {
   final int? selectedPersonId;
   final void Function(int x, int y) onTileTap;
   final void Function(int id) onPersonTap;
+  final GlobalKey? stackKey;
 
   const GameBoard({
     super.key,
@@ -26,6 +27,7 @@ class GameBoard extends StatelessWidget {
     this.selectedPersonId,
     required this.onTileTap,
     required this.onPersonTap,
+    this.stackKey,
   });
 
   @override
@@ -67,6 +69,7 @@ class GameBoard extends StatelessWidget {
                   width: naturalWidth,
                   height: naturalHeight,
                   child: Stack(
+                    key: stackKey,
                     clipBehavior: Clip.none,
                     children: [
                       for (int y = 0; y < gridH; y++)

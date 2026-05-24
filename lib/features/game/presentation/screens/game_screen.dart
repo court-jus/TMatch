@@ -11,24 +11,36 @@ import 'package:tmatch/features/game/presentation/widgets/floor_switcher.dart';
 import 'package:tmatch/features/game/presentation/widgets/person_widget.dart';
 import 'package:tmatch/features/game/presentation/widgets/score_display.dart';
 import 'package:tmatch/features/game/presentation/widgets/stash_display.dart';
+import 'package:tmatch/features/game/presentation/widgets/star_animation_overlay.dart';
 
-class GameScreen extends ConsumerWidget {
+class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GameScreen> createState() => _GameScreenState();
+}
+
+class _GameScreenState extends ConsumerState<GameScreen> {
+  final _boardStackKey = GlobalKey();
+  final _scoreKey = GlobalKey();
+  final _mainStackKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
     final gameState = ref.watch(gameNotifierProvider);
     final notifier = ref.read(gameNotifierProvider.notifier);
 
     return Scaffold(
       body: SafeArea(
         child: Stack(
+          key: _mainStackKey,
           children: [
             Column(
               children: [
                 _TopBar(
                   currentTile: gameState.currentTile,
                   score: gameState.score,
+                  scoreKey: _scoreKey,
                   onStashTap: notifier.swapWithStash,
                   persons: gameState.persons,
                   selectedPersonId: gameState.selectedPersonId,
@@ -44,6 +56,7 @@ class GameScreen extends ConsumerWidget {
                     selectedPersonId: gameState.selectedPersonId,
                     onTileTap: (x, y) => notifier.placeTile(x, y),
                     onPersonTap: (id) => notifier.selectPerson(id),
+                    stackKey: _boardStackKey,
                   ),
                 ),
                 _BottomBar(
@@ -97,6 +110,15 @@ class GameScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: StarAnimationOverlay(
+                  boardStackKey: _boardStackKey,
+                  scoreKey: _scoreKey,
+                  mainStackKey: _mainStackKey,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -188,6 +210,7 @@ class GameScreen extends ConsumerWidget {
 class _TopBar extends StatelessWidget {
   final TileType currentTile;
   final int score;
+  final GlobalKey scoreKey;
   final VoidCallback onStashTap;
   final List<Person> persons;
   final int? selectedPersonId;
@@ -197,6 +220,7 @@ class _TopBar extends StatelessWidget {
   const _TopBar({
     required this.currentTile,
     required this.score,
+    required this.scoreKey,
     required this.onStashTap,
     required this.persons,
     required this.selectedPersonId,
@@ -268,7 +292,7 @@ class _TopBar extends StatelessWidget {
                     ),
                   ),
                 ),
-              ScoreDisplay(score: score),
+              ScoreDisplay(key: scoreKey, score: score),
             ],
           ),
         );

@@ -39,7 +39,7 @@ Parfois, vous devez placer des "Insectes". Ils se déplacent librement sur le pl
 
 # Petits personnsages
 
-Au départ il n'y a que la reine. Un nouveau personnage apparaît à chaque fois que vous réalisez une combinaison de niveau 5 ou plus (planche de bois).
+Au départ il n'y a que la reine. Un nouveau personnage apparaît à chaque fois que vous réalisez une combinaison de niveau 5 ou plus (petite maison).
 
 Les personnages se déplacent sur les cellules "hors d'eau". Contrairement aux insectes, ils peuvent se déplacer en diagonale.
 

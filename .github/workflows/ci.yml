@@ -1,0 +1,203 @@
+name: CI
+on:
+  workflow_dispatch:
+  push:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    name: Check
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install Dependencies
+        run: flutter pub get
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+      - name: Run tests
+        run: flutter test
+  auto-tag:
+    if: github.ref_type == 'branch' && github.ref == 'refs/heads/master'
+    needs: [check]
+    runs-on: ubuntu-latest
+    outputs:
+      tag_created: ${{ steps.tag.outputs.tag_created }}
+      tag_name: ${{ steps.tag.outputs.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Auto-tag
+        id: tag
+        run: |
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
+          # Strip the Flutter build-number suffix (+N) so the source tag
+          # stays clean as `vX.Y.Z`. Build numbers live in pubspec.yaml
+          # for the Play Store and are not meaningful on the git side.
+          TAG="v${VERSION%+*}"
+          echo "tag_name=$TAG" >> "$GITHUB_OUTPUT"
+
+          if git ls-remote --exit-code origin "refs/tags/${TAG}" > /dev/null 2>&1; then
+            echo "Tag ${TAG} already exists."
+            echo "tag_created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+          echo "tag_created=true" >> "$GITHUB_OUTPUT"
+  build-apk:
+    needs: [auto-tag]
+    if: |
+      !failure() && !cancelled() && (
+        needs.auto-tag.outputs.tag_created == 'true' ||
+        startsWith(github.ref, 'refs/tags/v') ||
+        github.event_name == 'workflow_dispatch'
+      )
+    runs-on: ubuntu-latest
+    name: Build APK
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter --version
+      - name: Install Dependencies
+        run: flutter pub get
+      - name: Build
+        run: flutter build apk --release
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ApkReleases
+          path: build/app/outputs/flutter-apk/app-release.apk
+  build-windows:
+    needs: [auto-tag]
+    if: |
+      !failure() && !cancelled() && (
+        needs.auto-tag.outputs.tag_created == 'true' ||
+        startsWith(github.ref, 'refs/tags/v') ||
+        github.event_name == 'workflow_dispatch'
+      )
+    runs-on: windows-latest
+    name: Build Windows
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter --version
+      - name: Install Dependencies
+        run: flutter pub get
+      - name: Build
+        run: flutter build windows
+      - name: package
+        run: |
+          cd build
+          tar -czvf windows-build.tgz windows/x64/runner/Release
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WindowsRelease
+          path: build/windows-build.tgz
+  build-web:
+    needs: [auto-tag]
+    if: |
+      !failure() && !cancelled() && (
+        needs.auto-tag.outputs.tag_created == 'true' ||
+        startsWith(github.ref, 'refs/tags/v') ||
+        github.event_name == 'workflow_dispatch'
+      )
+    runs-on: ubuntu-latest
+    name: Build Web
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+      - name: Setup flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter --version
+      - name: Install Dependencies
+        run: flutter pub get
+      - name: Generate privacy-policy HTML pages
+        run: dart run bin/build_privacy.dart
+      - name: Build
+        run: flutter build web --base-href=/tmatch/
+      - name: package
+        run: |
+          cd build
+          tar -czvf web-build.tgz web
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WebRelease
+          path: build/web-build.tgz
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [build-apk, build-windows, build-web]
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ApkReleases
+          path: artifacts/apk
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: WindowsRelease
+          path: artifacts/windows
+      - name: Download Web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: WebRelease
+          path: artifacts/web
+      - name: Extract version from pubspec.yaml
+        run: |
+          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
+          # Strip the Flutter build-number suffix to match the tag form
+          # produced by the auto-tag job (vX.Y.Z, no +N).
+          echo "VERSION=${version%+*}" >> $GITHUB_ENV
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ env.VERSION }}
+          name: v${{ env.VERSION }}
+          artifacts: "artifacts/apk/app-release.apk,artifacts/windows/windows-build.tgz,artifacts/web/web-build.tgz"
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [build-web]
+    steps:
+      - name: Download Web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: WebRelease
+          path: artifacts/web
+      - name: Extract web build
+        run: |
+          cd artifacts/web
+          tar -xzf web-build.tgz
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: artifacts/web/web

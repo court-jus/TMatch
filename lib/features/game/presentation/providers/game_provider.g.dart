@@ -6,7 +6,7 @@ part of 'game_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$gameRepositoryHash() => r'919180b571ebae7efbe460b1e09852ad82c737d3';
+String _$gameRepositoryHash() => r'7f5e0fd33cb7aa9e60bb2aef0610439e98d611fd';
 
 /// See also [gameRepository].
 @ProviderFor(gameRepository)
@@ -23,7 +23,7 @@ final gameRepositoryProvider = Provider<GameRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef GameRepositoryRef = ProviderRef<GameRepository>;
-String _$gameNotifierHash() => r'0a516121fcdea7bb2a9a1827610477d608c6f31d';
+String _$gameNotifierHash() => r'4624d1366b07664747563c439535e16697fbe54a';
 
 /// See also [GameNotifier].
 @ProviderFor(GameNotifier)

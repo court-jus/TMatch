@@ -20,6 +20,16 @@ sealed class TileType {
   bool get isDiamond => value <= -5;
 }
 
+final class PersonTile extends TileType {
+  const PersonTile(super.value);
+  @override
+  String get assetPath => switch (value) {
+    9 => 'assets/images/queen.png',
+    10 => 'assets/images/person1.png',
+    _ => '',
+  };
+}
+
 final class RegularTile extends TileType {
   const RegularTile(super.value);
   @override
@@ -29,10 +39,9 @@ final class RegularTile extends TileType {
     3 => 'assets/images/Grass Block.png',
     4 => 'assets/images/Plain Block.png',
     5 => 'assets/images/Stone Block.png',
-    6 => 'assets/images/Wood Block.png',
+    6 => 'assets/images/House Block.png',
     7 => 'assets/images/Wall Block.png',
-    9 => 'assets/images/queen.png',
-    _ => 'assets/images/type_$value.png',
+    _ => '',
   };
   @override
   String get bubbleAssetPath => switch (value) {
@@ -41,7 +50,7 @@ final class RegularTile extends TileType {
     3 => 'assets/images/Grass Bubble.png',
     4 => 'assets/images/Plain Bubble.png',
     5 => 'assets/images/Stone Bubble.png',
-    6 => 'assets/images/Wood Bubble.png',
+    6 => 'assets/images/House Bubble.png',
     7 => 'assets/images/Wall Bubble.png',
     _ => '',
   };
@@ -83,18 +92,10 @@ final class SpecialTile extends TileType {
   const SpecialTile(super.value);
   @override
   String get assetPath => switch (value) {
-    -1 => 'assets/images/Door Tall Closed.png',
-    -2 => 'assets/images/Enemy Bug.png',
-    -3 => 'assets/images/Key.png',
-    -4 => 'assets/images/Star.png',
     _ => 'assets/images/EmptyNegativeBlock.png',
   };
   @override
   String get bubbleAssetPath => switch (value) {
-    -1 => 'assets/images/Door Tall Bubble.png',
-    -2 => 'assets/images/Enemy Bug Bubble.png',
-    -3 => 'assets/images/Key Bubble.png',
-    -4 => 'assets/images/Star Bubble.png',
     _ => '',
   };
 }

@@ -1,12 +1,13 @@
 import 'dart:math';
 
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tmatch/core/constants/game_constants.dart';
 import 'package:tmatch/core/models/game_state.dart';
 import 'package:tmatch/core/models/person.dart';
 import 'package:tmatch/core/models/position.dart';
 import 'package:tmatch/core/models/tile_type.dart';
-import 'package:tmatch/core/services/hive_provider.dart';
 import 'package:tmatch/core/utils/floor_mapper.dart';
 import 'package:tmatch/core/utils/randomizer.dart';
 import 'package:tmatch/features/game/data/game_repository.dart';
@@ -14,6 +15,7 @@ import 'package:tmatch/features/game/domain/bug_system.dart';
 import 'package:tmatch/features/game/domain/game_engine.dart';
 import 'package:tmatch/core/models/grid.dart';
 import 'package:tmatch/features/game/domain/person_ai.dart';
+import 'package:tmatch/features/game/presentation/providers/star_animation_provider.dart';
 
 part 'game_provider.g.dart';
 
@@ -39,13 +41,16 @@ class GameNotifier extends _$GameNotifier {
   }
 
   void newGame() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(starAnimationNotifierProvider.notifier).clear();
+    });
     var newState = GameState.initial();
     final (grid, queenPos) = _initializeGrid();
 
     newState = newState.copyWith(
       grid: grid,
       currentTile: _randomizer.next(),
-      persons: [Person(id: 0, type: const RegularTile(9), position: queenPos)],
+      persons: [Person(id: 0, type: const PersonTile(9), position: queenPos)],
       selectedPersonId: 0,
     );
 
@@ -54,7 +59,12 @@ class GameNotifier extends _$GameNotifier {
 
   void placeTile(int x, int y) {
     if (state.isGameOver) return;
+    final oldScore = state.score;
     state = _engine.placeTile(state, x, y);
+    final delta = state.score - oldScore;
+    if (delta >= 100) {
+      ref.read(starAnimationNotifierProvider.notifier).trigger(x, y, delta);
+    }
   }
 
   void swapWithStash() {
@@ -127,6 +137,7 @@ class GameNotifier extends _$GameNotifier {
       0,
     );
     grid = grid.setCell(queenPos, const RegularTile(1));
+    print('[INIT] queen at ($queenPos) t=1');
 
     for (var x = 0; x < GameConstants.gridWidth; x++) {
       for (var y = 0; y < GameConstants.gridHeight; y++) {
@@ -134,8 +145,10 @@ class GameNotifier extends _$GameNotifier {
           continue;
         }
         if (_random.nextDouble() < GameConstants.mapFillPercent) {
+          final tile = _randomizer.next(forMapFill: true);
           final pos = Position(x, y, 0);
-          grid = grid.setCell(pos, _randomizer.next(forMapFill: true));
+          grid = grid.setCell(pos, tile);
+          print('[INIT] ($x, $y, 0) t=${tile.value}');
         }
       }
     }
@@ -146,6 +159,5 @@ class GameNotifier extends _$GameNotifier {
 
 @Riverpod(keepAlive: true)
 GameRepository gameRepository(GameRepositoryRef ref) {
-  final hiveService = ref.watch(hiveServiceProvider);
-  return GameRepository(hiveService.savesBox);
+  throw UnimplementedError('gameRepository must be overridden in main()');
 }

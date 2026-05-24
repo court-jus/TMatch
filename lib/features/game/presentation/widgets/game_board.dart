@@ -5,6 +5,7 @@ import 'package:tmatch/core/models/position.dart';
 import 'package:tmatch/core/models/tile_type.dart';
 import 'package:tmatch/core/utils/floor_mapper.dart';
 import 'package:tmatch/core/models/grid.dart';
+import 'package:tmatch/features/game/presentation/widgets/person_widget.dart';
 import 'package:tmatch/features/game/presentation/widgets/tile_widget.dart';
 
 class GameBoard extends StatelessWidget {
@@ -15,6 +16,7 @@ class GameBoard extends StatelessWidget {
   final int? selectedPersonId;
   final void Function(int x, int y) onTileTap;
   final void Function(int id) onPersonTap;
+  final GlobalKey? stackKey;
 
   const GameBoard({
     super.key,
@@ -25,6 +27,7 @@ class GameBoard extends StatelessWidget {
     this.selectedPersonId,
     required this.onTileTap,
     required this.onPersonTap,
+    this.stackKey,
   });
 
   @override
@@ -40,7 +43,9 @@ class GameBoard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final scale = (constraints.maxWidth / naturalWidth).clamp(
+        final scaleX = constraints.maxWidth / naturalWidth;
+        final scaleY = constraints.maxHeight / naturalHeight;
+        final scale = (scaleX < scaleY ? scaleX : scaleY).clamp(
           0.0,
           GameConstants.maxGridScale,
         );
@@ -64,6 +69,7 @@ class GameBoard extends StatelessWidget {
                   width: naturalWidth,
                   height: naturalHeight,
                   child: Stack(
+                    key: stackKey,
                     clipBehavior: Clip.none,
                     children: [
                       for (int y = 0; y < gridH; y++)
@@ -137,7 +143,7 @@ class GameBoard extends StatelessWidget {
                     ),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: TileWidget(tile: personHere.type),
+                  child: PersonWidget(tile: personHere.type),
                 ),
               ),
             if (personHere != null && stashes[personHere.id] != null)
